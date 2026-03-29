@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A0A1A"/>
+      <stop offset="100%" style="stop-color:#1A1A3E"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFC107"/>
+      <stop offset="100%" style="stop-color:#FF8F00"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="38" fill="url(#bg)"/>
+  <text x="96" y="115" font-size="90" text-anchor="middle" fill="url(#accent)">🍽️</text>
+  <text x="96" y="165" font-family="sans-serif" font-weight="800" font-size="22" text-anchor="middle" fill="#FFC107">DineFlow</text>
+</svg>

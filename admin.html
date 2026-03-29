@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RestroDyn Admin — Dashboard</title>
+  <meta name="description" content="RestroDyn Admin Dashboard — manage menu, orders, QR codes, and analytics." />
+  <meta name="theme-color" content="#0A0A1A" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>" />
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="admin-sidebar glass-strong" id="admin-sidebar">
+    <div class="sidebar-brand">
+      <a href="/">
+        <span class="logo-icon">🍽️</span>
+        <span class="logo-text">RestroDyn</span>
+      </a>
+      <span class="sidebar-badge badge badge-primary">Admin</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-link active" data-section="dashboard" id="nav-dashboard">
+        <span class="sidebar-icon">📊</span>
+        <span>Dashboard</span>
+      </button>
+      <button class="sidebar-link" data-section="menu" id="nav-menu">
+        <span class="sidebar-icon">🍽️</span>
+        <span>Menu</span>
+      </button>
+      <button class="sidebar-link" data-section="orders" id="nav-orders">
+        <span class="sidebar-icon">📋</span>
+        <span>Orders</span>
+      </button>
+      <button class="sidebar-link" data-section="qr" id="nav-qr">
+        <span class="sidebar-icon">📱</span>
+        <span>QR Codes</span>
+      </button>
+      <button class="sidebar-link" data-section="settings" id="nav-settings">
+        <span class="sidebar-icon">⚙️</span>
+        <span>Settings</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div id="admin-theme-slot"></div>
+      <a href="/kitchen.html" class="btn btn-sm btn-secondary" style="width:100%">👨‍🍳 Kitchen View</a>
+      <button class="btn btn-sm btn-danger" id="admin-logout-btn" style="width:100%">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <!-- Mobile Top Bar -->
+  <header class="admin-mobile-header glass-strong" id="mobile-header">
+    <button class="btn btn-icon" id="mobile-sidebar-toggle" aria-label="Toggle sidebar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <span class="admin-mobile-title" id="mobile-title">Dashboard</span>
+    <div id="mobile-theme-slot"></div>
+  </header>
+
+  <!-- Main Content -->
+  <!-- Subscription Banner -->
+  <div class="sub-banner" id="subscription-banner" style="display:none"></div>
+
+  <main class="admin-main" id="admin-main">
+    <!-- Dashboard Section -->
+    <section class="admin-section active" id="section-dashboard">
+      <div class="section-top">
+        <h1>Dashboard</h1>
+        <p class="section-desc">Overview of today's performance</p>
+      </div>
+      <div class="analytics-cards stagger" id="analytics-cards">
+        <!-- Stat cards injected by JS -->
+      </div>
+      <div class="analytics-charts">
+        <div class="chart-card glass">
+          <h3>Popular Items</h3>
+          <canvas id="popular-chart"></canvas>
+        </div>
+        <div class="chart-card glass">
+          <h3>Orders Today</h3>
+          <canvas id="orders-chart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Menu Management -->
+    <section class="admin-section" id="section-menu">
+      <div class="section-top">
+        <div>
+          <h1>Menu Management</h1>
+          <p class="section-desc">Manage your categories and menu items</p>
+        </div>
+        <button class="btn btn-primary" id="add-item-btn">+ Add Item</button>
+      </div>
+      <!-- Category tabs -->
+      <div class="admin-category-tabs" id="admin-category-tabs">
+        <!-- Injected by JS -->
+      </div>
+      <div class="admin-menu-grid" id="admin-menu-grid">
+        <!-- Menu items injected by JS -->
+      </div>
+    </section>
+
+    <!-- Orders Section -->
+    <section class="admin-section" id="section-orders">
+      <div class="section-top">
+        <div>
+          <h1>Orders</h1>
+          <p class="section-desc">View and manage all orders</p>
+        </div>
+        <div class="order-filters" id="order-filters">
+          <button class="filter-chip active" data-status="all">All</button>
+          <button class="filter-chip" data-status="new">🆕 New</button>
+          <button class="filter-chip" data-status="preparing">👨‍🍳 Preparing</button>
+          <button class="filter-chip" data-status="ready">🔔 Ready</button>
+          <button class="filter-chip" data-status="served">✨ Served</button>
+        </div>
+      </div>
+      <div class="admin-orders-list" id="admin-orders-list">
+        <!-- Orders injected by JS -->
+      </div>
+    </section>
+
+    <!-- QR Code Generator -->
+    <section class="admin-section" id="section-qr">
+      <div class="section-top">
+        <div>
+          <h1>QR Code Generator</h1>
+          <p class="section-desc">Generate QR codes for each table</p>
+        </div>
+      </div>
+      <div class="qr-controls glass">
+        <div class="input-group">
+          <label>Number of Tables</label>
+          <input type="number" class="input" id="qr-table-count" value="10" min="1" max="100" />
+        </div>
+        <button class="btn btn-primary" id="generate-qr-btn">Generate QR Codes</button>
+      </div>
+      <div class="qr-grid" id="qr-grid">
+        <!-- QR codes injected by JS -->
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section class="admin-section" id="section-settings">
+      <div class="section-top">
+        <h1>Settings</h1>
+        <p class="section-desc">Restaurant profile and preferences</p>
+      </div>
+      <div class="settings-form glass">
+        <div class="input-group">
+          <label>Restaurant Name</label>
+          <input type="text" class="input" id="setting-name" />
+        </div>
+        <div class="input-group">
+          <label>Tagline</label>
+          <input type="text" class="input" id="setting-tagline" />
+        </div>
+        <div class="input-group">
+          <label>Currency Symbol</label>
+          <input type="text" class="input" id="setting-currency" />
+        </div>
+        <div class="input-group">
+          <label>Table Count</label>
+          <input type="number" class="input" id="setting-tables" min="1" max="200" />
+        </div>
+        <button class="btn btn-primary" id="save-settings-btn">Save Settings</button>
+      </div>
+      <div class="settings-danger glass" style="margin-top:var(--space-xl)">
+        <h3 style="color:var(--error);margin-bottom:var(--space-sm)">⚠️ Danger Zone</h3>
+        <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-bottom:var(--space-md)">Reset all data including menu, orders, and settings.</p>
+        <button class="btn btn-danger btn-sm" id="reset-data-btn">Reset All Data</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Add/Edit Item Modal -->
+  <div class="modal-overlay" id="item-modal-overlay">
+    <div class="modal" id="item-modal">
+      <div class="modal-header">
+        <h3 id="item-modal-title">Add Menu Item</h3>
+        <button class="btn btn-icon btn-secondary" id="item-modal-close" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="item-modal-body">
+        <!-- Form injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/admin-app.js"></script>
+</body>
+</html>

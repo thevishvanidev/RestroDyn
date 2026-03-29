@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RestroDyn — Smart QR Restaurant Ordering SaaS</title>
+  <meta name="description" content="RestroDyn: The multi-restaurant SaaS platform for QR-based ordering. Register your restaurant, manage menus, and delight customers." />
+  <meta name="theme-color" content="#0A0A1A" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>" />
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/landing.css" />
+</head>
+<body>
+  <!-- 3D Hero Canvas -->
+  <canvas id="hero-canvas"></canvas>
+
+  <!-- Navigation -->
+  <nav class="nav glass-strong" id="main-nav">
+    <div class="nav-inner container">
+      <a href="/" class="nav-logo">
+        <span class="logo-icon">🍽️</span>
+        <span class="logo-text">RestroDyn</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#pricing" class="nav-link">Pricing</a>
+        <a href="/register.html?tab=login" class="nav-link" id="nav-login">Login</a>
+        <a href="/register.html" class="btn btn-primary btn-sm nav-cta">Register Free</a>
+        <div id="theme-toggle-container"></div>
+      </div>
+      <button class="nav-mobile-toggle btn btn-icon" id="mobile-menu-toggle" aria-label="Toggle menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+    <!-- Mobile Menu -->
+    <div class="nav-mobile-menu" id="mobile-menu">
+      <a href="#features" class="nav-mobile-link">✨ Features</a>
+      <a href="#pricing" class="nav-mobile-link">💳 Pricing</a>
+      <a href="/register.html?tab=login" class="nav-mobile-link">🔓 Login</a>
+      <a href="/register.html" class="nav-mobile-link nav-mobile-cta">🚀 Register Free</a>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero" id="hero">
+    <div class="hero-content container">
+      <div class="hero-badge animate-fade-up">
+        <span class="badge badge-primary">✨ #1 QR Restaurant Platform</span>
+      </div>
+      <h1 class="hero-title">
+        <span class="hero-title-line animate-fade-up" style="animation-delay: 0.1s">Scan.</span>
+        <span class="hero-title-line animate-fade-up" style="animation-delay: 0.2s">Order.</span>
+        <span class="hero-title-line hero-title-accent animate-fade-up" style="animation-delay: 0.3s">Grow.</span>
+      </h1>
+      <p class="hero-subtitle animate-fade-up" style="animation-delay: 0.4s">
+        Register your restaurant on RestroDyn — the SaaS platform that powers QR-based ordering, 
+        kitchen management, and analytics for restaurants of all sizes.
+      </p>
+      <div class="hero-actions animate-fade-up" style="animation-delay: 0.5s">
+        <a href="/register.html" class="btn btn-primary btn-lg hero-cta">
+          🚀 Register Your Restaurant
+        </a>
+        <a href="/menu.html?restaurant=restrodyn-demo&table=1" class="btn btn-secondary btn-lg">
+          📱 Try Demo Menu
+        </a>
+      </div>
+      <div class="hero-trust animate-fade-up" style="animation-delay: 0.7s">
+        <div class="trust-avatars-row">
+          <div class="trust-dot">🏪</div>
+          <div class="trust-dot">🍕</div>
+          <div class="trust-dot">🍜</div>
+          <div class="trust-dot">☕</div>
+          <div class="trust-dot">🍔</div>
+        </div>
+        <span>Trusted by <strong id="landing-trust-count">0</strong> restaurants</span>
+      </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="scroll-indicator animate-fade-in" style="animation-delay: 1.5s">
+      <div class="scroll-mouse">
+        <div class="scroll-wheel"></div>
+      </div>
+      <span>Scroll to explore</span>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header animate-fade-up">
+        <span class="badge badge-primary">Features</span>
+        <h2 class="section-title">Everything your restaurant needs</h2>
+        <p class="section-subtitle">From QR scanning to kitchen display — a complete digital solution</p>
+      </div>
+
+      <div class="feature-grid stagger">
+        <div class="feature-card glass" id="feature-qr">
+          <div class="feature-icon">📱</div>
+          <h3>QR Code Ordering</h3>
+          <p>Customers scan a table QR code and instantly access your beautiful digital menu — no app download needed.</p>
+        </div>
+        <div class="feature-card glass" id="feature-menu">
+          <div class="feature-icon">🍽️</div>
+          <h3>Interactive Menu</h3>
+          <p>Stunning menu with categories, dietary filters, customization options, and real-time availability.</p>
+        </div>
+        <div class="feature-card glass" id="feature-kitchen">
+          <div class="feature-icon">👨‍🍳</div>
+          <h3>Kitchen Dashboard</h3>
+          <p>Real-time order queue with audio notifications, prep timers, and one-click status updates.</p>
+        </div>
+        <div class="feature-card glass" id="feature-admin">
+          <div class="feature-icon">📊</div>
+          <h3>Admin Analytics</h3>
+          <p>Full menu management, QR generation, order tracking, and revenue analytics in one panel.</p>
+        </div>
+        <div class="feature-card glass" id="feature-multi">
+          <div class="feature-icon">🏢</div>
+          <h3>Multi-Restaurant</h3>
+          <p>Each restaurant gets its own isolated data, custom branding, and unique QR codes. Scale effortlessly.</p>
+        </div>
+        <div class="feature-card glass" id="feature-realtime">
+          <div class="feature-icon">🔄</div>
+          <h3>Real-Time Sync</h3>
+          <p>Orders, status changes, and menu updates sync instantly across all dashboards — no refresh needed.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="how-it-works" id="how-it-works">
+    <div class="container">
+      <div class="section-header animate-fade-up">
+        <span class="badge badge-primary">How It Works</span>
+        <h2 class="section-title">Get started in minutes</h2>
+      </div>
+      <div class="steps stagger">
+        <div class="step">
+          <div class="step-number">01</div>
+          <div class="step-content">
+            <h3>Register Your Restaurant</h3>
+            <p>Sign up with your restaurant details and start your 14-day free trial instantly.</p>
+          </div>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step">
+          <div class="step-number">02</div>
+          <div class="step-content">
+            <h3>Set Up Your Menu</h3>
+            <p>Add categories, dishes, prices, images, and customization options from the admin dashboard.</p>
+          </div>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step">
+          <div class="step-number">03</div>
+          <div class="step-content">
+            <h3>Generate QR Codes</h3>
+            <p>Print unique QR codes for each table. Customers scan & order — no app download needed.</p>
+          </div>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step">
+          <div class="step-number">04</div>
+          <div class="step-content">
+            <h3>Manage & Grow</h3>
+            <p>Track orders in real-time, analyze trends, and optimize your menu for more revenue.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section class="pricing" id="pricing">
+    <div class="container">
+      <div class="section-header animate-fade-up">
+        <span class="badge badge-primary">Pricing</span>
+        <h2 class="section-title">Simple, transparent pricing</h2>
+        <p class="section-subtitle">Start with a 14-day free trial. No credit card required.</p>
+      </div>
+      <div class="pricing-grid stagger" id="pricing-grid">
+        <!-- Pricing cards injected by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-card glass">
+        <h2>Ready to transform your restaurant?</h2>
+        <p>Join hundreds of restaurants already using RestroDyn to streamline ordering and boost revenue.</p>
+        <a href="/register.html" class="btn btn-primary btn-lg">🚀 Start Your Free Trial</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <span class="logo-icon">🍽️</span>
+          <span class="logo-text">RestroDyn</span>
+          <p class="footer-tagline">Smart dining, elevated experience.</p>
+        </div>
+        <div class="footer-links">
+          <a href="/register.html">Register</a>
+          <a href="/register.html?tab=login">Login</a>
+          <a href="/super-admin.html">Super Admin</a>
+        </div>
+        <div class="footer-note">
+          Built with ❤️ as a modern SaaS PWA
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RestroDyn — Super Admin</title>
+  <meta name="description" content="RestroDyn Super Admin — manage all restaurants, subscriptions, and platform settings." />
+  <meta name="theme-color" content="#0A0A1A" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>" />
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/super-admin.css" />
+</head>
+<body>
+  <!-- Login Gate -->
+  <div class="sa-login-gate" id="sa-login-gate">
+    <div class="sa-login-card glass-strong">
+      <div class="sa-login-icon">👑</div>
+      <h2>Super Admin</h2>
+      <p>Enter credentials to access the platform control panel</p>
+      <form id="sa-login-form">
+        <div class="input-group">
+          <label for="sa-email">Email</label>
+          <input type="email" class="input" id="sa-email" value="admin@restrodyn.app" required />
+        </div>
+        <div class="input-group">
+          <label for="sa-password">Password</label>
+          <input type="password" class="input" id="sa-password" placeholder="Enter admin password" required />
+        </div>
+        <div class="sa-login-error hidden" id="sa-login-error">Invalid credentials</div>
+        <button type="submit" class="btn btn-primary btn-lg" style="width:100%">🔓 Access Panel</button>
+      </form>
+      <a href="/" class="sa-login-back">← Back to Home</a>
+    </div>
+  </div>
+
+  <!-- Main Panel (hidden until login) -->
+  <div class="sa-panel hidden" id="sa-panel">
+    <!-- Sidebar -->
+    <aside class="sa-sidebar glass-strong" id="sa-sidebar">
+      <div class="sidebar-brand">
+        <a href="/">
+          <span class="logo-icon">👑</span>
+          <span class="logo-text">RestroDyn</span>
+        </a>
+        <span class="sidebar-badge badge badge-warning">Super Admin</span>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-link active" data-section="sa-dashboard" id="sa-nav-dashboard">
+          <span class="sidebar-icon">📊</span>
+          <span>Dashboard</span>
+        </button>
+        <button class="sidebar-link" data-section="sa-restaurants" id="sa-nav-restaurants">
+          <span class="sidebar-icon">🏪</span>
+          <span>Restaurants</span>
+        </button>
+        <button class="sidebar-link" data-section="sa-subscriptions" id="sa-nav-subscriptions">
+          <span class="sidebar-icon">💳</span>
+          <span>Subscriptions</span>
+        </button>
+        <button class="sidebar-link" data-section="sa-settings" id="sa-nav-settings">
+          <span class="sidebar-icon">⚙️</span>
+          <span>Settings</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn btn-sm btn-danger" id="sa-logout-btn" style="width:100%">🚪 Logout</button>
+      </div>
+    </aside>
+
+    <!-- Mobile Header -->
+    <header class="sa-mobile-header glass-strong" id="sa-mobile-header">
+      <button class="btn btn-icon" id="sa-mobile-toggle" aria-label="Toggle sidebar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="sa-mobile-title" id="sa-mobile-title">Dashboard</span>
+      <div id="sa-mobile-theme-slot"></div>
+    </header>
+
+    <!-- Content -->
+    <main class="sa-main" id="sa-main">
+      <!-- Dashboard -->
+      <section class="sa-section active" id="section-sa-dashboard">
+        <div class="section-top">
+          <h1>Platform Dashboard</h1>
+          <p class="section-desc">Overview of the RestroDyn platform</p>
+        </div>
+        <div class="sa-stats-grid stagger" id="sa-stats-grid">
+          <!-- Stats injected by JS -->
+        </div>
+        <div class="sa-charts-grid">
+          <div class="chart-card glass">
+            <h3>Restaurant Growth</h3>
+            <canvas id="sa-growth-chart"></canvas>
+          </div>
+          <div class="chart-card glass">
+            <h3>Subscription Distribution</h3>
+            <canvas id="sa-sub-chart"></canvas>
+          </div>
+        </div>
+        <div class="sa-recent glass">
+          <h3>Recent Registrations</h3>
+          <div id="sa-recent-list">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Restaurants Management -->
+      <section class="sa-section" id="section-sa-restaurants">
+        <div class="section-top">
+          <div>
+            <h1>Restaurants</h1>
+            <p class="section-desc">Manage all registered restaurants</p>
+          </div>
+          <div class="sa-search-bar">
+            <input type="text" class="input" id="sa-search-restaurants" placeholder="Search restaurants..." />
+          </div>
+        </div>
+        <div class="sa-restaurant-table-wrapper">
+          <table class="sa-table" id="sa-restaurants-table">
+            <thead>
+              <tr>
+                <th>Restaurant</th>
+                <th>Owner</th>
+                <th>Status</th>
+                <th>Subscription</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="sa-restaurants-tbody">
+              <!-- Injected by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Subscriptions -->
+      <section class="sa-section" id="section-sa-subscriptions">
+        <div class="section-top">
+          <div>
+            <h1>Subscription Plans</h1>
+            <p class="section-desc">Configure pricing and plan features</p>
+          </div>
+        </div>
+        <div class="sa-plans-grid" id="sa-plans-grid">
+          <!-- Injected by JS -->
+        </div>
+        <div class="sa-payment-history glass" style="margin-top:var(--space-2xl)">
+          <h3>Payment History (Simulated)</h3>
+          <div id="sa-payment-list">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section class="sa-section" id="section-sa-settings">
+        <div class="section-top">
+          <h1>Platform Settings</h1>
+          <p class="section-desc">Configure global RestroDyn settings</p>
+        </div>
+        <div class="settings-form glass">
+          <div class="input-group">
+            <label>Platform Name</label>
+            <input type="text" class="input" id="sa-setting-platform-name" />
+          </div>
+          <div class="input-group">
+            <label>Support Email</label>
+            <input type="email" class="input" id="sa-setting-support-email" />
+          </div>
+          <div class="input-group">
+            <label>Trial Period (days)</label>
+            <input type="number" class="input" id="sa-setting-trial-days" min="0" max="90" />
+          </div>
+          <button class="btn btn-primary" id="sa-save-settings-btn">Save Settings</button>
+        </div>
+        <div class="settings-form glass" style="margin-top:var(--space-xl)">
+          <h3 style="margin-bottom:var(--space-md)">🔒 Change Admin Password</h3>
+          <div class="input-group">
+            <label>Current Password</label>
+            <input type="password" class="input" id="sa-current-password" />
+          </div>
+          <div class="input-group">
+            <label>New Password</label>
+            <input type="password" class="input" id="sa-new-password" />
+          </div>
+          <button class="btn btn-primary" id="sa-change-password-btn">Change Password</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="/js/super-admin-app.js"></script>
+</body>
+</html>

@@ -1,0 +1,305 @@
+/* ======================================================
+   RestroDyn — Kitchen Dashboard Styles
+   ====================================================== */
+
+.kitchen-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-sticky);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.kitchen-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-xl);
+  gap: var(--space-lg);
+}
+
+.kitchen-brand .logo-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.kitchen-brand .logo-icon { font-size: 1.5rem; }
+.kitchen-brand .logo-text {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: var(--text-lg);
+  background: linear-gradient(135deg, var(--primary-400), var(--primary-700));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.kitchen-stats {
+  display: flex;
+  gap: var(--space-xl);
+}
+
+.kitchen-stat {
+  text-align: center;
+}
+
+.stat-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  display: block;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.kitchen-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* ── Kitchen Board ── */
+.kitchen-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+  padding: calc(80px + var(--space-lg)) var(--space-lg) var(--space-lg);
+  min-height: 100vh;
+}
+
+.kitchen-column {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 2px solid;
+}
+
+.column-header h2 {
+  font-size: var(--text-base);
+  font-weight: 700;
+}
+
+.column-count {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+
+.column-header-new {
+  border-color: var(--primary-500);
+}
+.column-header-new .column-count {
+  background: rgba(255, 193, 7, 0.15);
+  color: var(--primary-500);
+}
+
+.column-header-preparing {
+  border-color: var(--warning);
+}
+.column-header-preparing .column-count {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.column-header-ready {
+  border-color: var(--success);
+}
+.column-header-ready .column-count {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.column-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* ── Order Card (Kitchen) ── */
+.kitchen-order-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  transition: all var(--transition-base);
+  animation: fade-up 0.4s ease;
+}
+
+.kitchen-order-card.new-arrival {
+  animation: bounce-in 0.5s ease, border-glow 2s infinite;
+  border-color: var(--primary-500);
+}
+
+.kitchen-order-card:hover {
+  border-color: rgba(255, 193, 7, 0.2);
+  box-shadow: var(--shadow-md);
+}
+
+.order-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+.order-card-table {
+  font-family: 'Outfit', sans-serif;
+  font-size: var(--text-lg);
+  font-weight: 800;
+}
+
+.order-card-number {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.order-card-timer {
+  font-family: 'Outfit', sans-serif;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+}
+
+.timer-green { background: var(--success-bg); color: var(--success); }
+.timer-yellow { background: var(--warning-bg); color: var(--warning); }
+.timer-red { background: var(--error-bg); color: var(--error); animation: pulse 1s infinite; }
+
+.order-card-items {
+  margin-bottom: var(--space-md);
+}
+
+.order-card-item {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-xs) 0;
+  font-size: var(--text-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.order-card-item:last-child { border-bottom: none; }
+
+.order-card-item-name {
+  font-weight: 500;
+}
+
+.order-card-item-qty {
+  font-weight: 700;
+  color: var(--primary-500);
+}
+
+.order-card-item-addons {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  padding-left: var(--space-md);
+  margin-bottom: var(--space-xs);
+}
+
+.order-card-notes {
+  font-size: var(--text-xs);
+  color: var(--warning);
+  background: var(--warning-bg);
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-md);
+}
+
+.order-card-notes::before {
+  content: '📝 Note: ';
+  font-weight: 600;
+}
+
+.order-card-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.order-card-actions .btn {
+  flex: 1;
+}
+
+/* ── Waiter Alert ── */
+.waiter-alert {
+  position: fixed;
+  bottom: var(--space-xl);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--primary-500);
+  animation: bounce-in 0.5s ease, glow-pulse 2s infinite;
+  z-index: var(--z-toast);
+}
+
+.waiter-alert-icon {
+  font-size: 1.5rem;
+  animation: float 1s ease-in-out infinite;
+}
+
+.waiter-alert-text {
+  font-weight: 600;
+}
+
+/* ── Empty Column ── */
+.column-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xl);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.column-empty-icon {
+  font-size: 2rem;
+  margin-bottom: var(--space-sm);
+  opacity: 0.4;
+}
+
+.column-empty p {
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 1024px) {
+  .kitchen-board {
+    grid-template-columns: 1fr;
+  }
+  .kitchen-column {
+    max-height: 50vh;
+  }
+}
+
+@media (max-width: 640px) {
+  .kitchen-stats { gap: var(--space-md); }
+  .stat-value { font-size: var(--text-xl); }
+  .kitchen-header-inner { padding: var(--space-sm) var(--space-md); }
+}

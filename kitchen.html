@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RestroDyn Kitchen — Order Queue</title>
+  <meta name="description" content="RestroDyn Kitchen Display System — real-time order queue for kitchen staff." />
+  <meta name="theme-color" content="#0A0A1A" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍🍳</text></svg>" />
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/kitchen.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="kitchen-header glass-strong">
+    <div class="kitchen-header-inner">
+      <div class="kitchen-brand">
+        <a href="/" class="logo-link">
+          <span class="logo-icon">👨‍🍳</span>
+          <span class="logo-text">RestroDyn Kitchen</span>
+        </a>
+      </div>
+      <div class="kitchen-stats" id="kitchen-stats">
+        <div class="kitchen-stat">
+          <span class="stat-value" id="stat-new">0</span>
+          <span class="stat-label">New</span>
+        </div>
+        <div class="kitchen-stat">
+          <span class="stat-value" id="stat-preparing">0</span>
+          <span class="stat-label">Preparing</span>
+        </div>
+        <div class="kitchen-stat">
+          <span class="stat-value" id="stat-ready">0</span>
+          <span class="stat-label">Ready</span>
+        </div>
+      </div>
+      <div class="kitchen-actions">
+        <button class="btn btn-sm btn-secondary" id="sound-toggle" aria-label="Toggle sound">🔊 Sound On</button>
+        <div id="theme-slot"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Kanban Columns -->
+  <main class="kitchen-board" id="kitchen-board">
+    <div class="kitchen-column" id="col-new">
+      <div class="column-header column-header-new">
+        <h2>🆕 New Orders</h2>
+        <span class="column-count" id="col-new-count">0</span>
+      </div>
+      <div class="column-body" id="col-new-body">
+        <!-- Order cards injected by JS -->
+      </div>
+    </div>
+    <div class="kitchen-column" id="col-preparing">
+      <div class="column-header column-header-preparing">
+        <h2>👨‍🍳 Preparing</h2>
+        <span class="column-count" id="col-preparing-count">0</span>
+      </div>
+      <div class="column-body" id="col-preparing-body">
+        <!-- Order cards injected by JS -->
+      </div>
+    </div>
+    <div class="kitchen-column" id="col-ready">
+      <div class="column-header column-header-ready">
+        <h2>🔔 Ready</h2>
+        <span class="column-count" id="col-ready-count">0</span>
+      </div>
+      <div class="column-body" id="col-ready-body">
+        <!-- Order cards injected by JS -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Waiter Call Alert -->
+  <div class="waiter-alert glass-strong" id="waiter-alert" style="display:none">
+    <span class="waiter-alert-icon">🔔</span>
+    <span class="waiter-alert-text" id="waiter-alert-text">Table X is calling!</span>
+    <button class="btn btn-sm btn-primary" id="waiter-dismiss">Dismiss</button>
+  </div>
+
+  <script type="module" src="/js/kitchen-app.js"></script>
+</body>
+</html>

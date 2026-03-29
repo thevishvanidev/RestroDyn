@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>RestroDyn Menu — Order Now</title>
+  <meta name="description" content="Browse the RestroDyn restaurant menu and order directly from your table." />
+  <meta name="theme-color" content="#0A0A1A" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>" />
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/menu.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="menu-header glass-strong" id="menu-header">
+    <div class="menu-header-inner">
+      <a href="/" class="menu-back" id="back-btn" aria-label="Back">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </a>
+      <div class="menu-header-center">
+        <h1 class="menu-restaurant-name" id="restaurant-name">RestroDyn</h1>
+        <span class="menu-table-badge" id="table-badge">Table 1</span>
+      </div>
+      <div class="menu-header-actions">
+        <div id="theme-toggle-slot"></div>
+        <button class="btn btn-icon btn-secondary waiter-btn" id="call-waiter-btn" aria-label="Call Waiter">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="menu-search-wrapper">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="menu-search input" id="menu-search" placeholder="Search dishes..." />
+    </div>
+
+    <!-- Category Navigation -->
+    <nav class="category-nav" id="category-nav">
+      <div class="category-scroll" id="category-scroll">
+        <!-- Categories injected by JS -->
+      </div>
+    </nav>
+
+    <!-- Dietary Filters -->
+    <div class="dietary-filters" id="dietary-filters">
+      <button class="filter-chip active" data-filter="all">All</button>
+      <button class="filter-chip" data-filter="vegetarian">🟢 Veg</button>
+      <button class="filter-chip" data-filter="vegan">🌱 Vegan</button>
+      <button class="filter-chip" data-filter="gluten-free">🌾 GF</button>
+    </div>
+  </header>
+
+  <!-- Menu Content -->
+  <main class="menu-content" id="menu-content">
+    <!-- Menu items injected by JS -->
+  </main>
+
+  <!-- Cart Bar -->
+  <div class="cart-bar glass-strong" id="cart-bar" style="display:none">
+    <div class="cart-bar-info">
+      <span class="cart-bar-count" id="cart-count">0 items</span>
+      <span class="cart-bar-total" id="cart-total">₹0</span>
+    </div>
+    <button class="btn btn-primary cart-bar-btn" id="view-cart-btn">
+      View Cart
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+    </button>
+  </div>
+
+  <!-- Cart Slide-Up Panel -->
+  <div class="cart-overlay" id="cart-overlay">
+    <div class="cart-panel glass-strong" id="cart-panel">
+      <div class="cart-header">
+        <h2>Your Order</h2>
+        <button class="btn btn-icon btn-secondary" id="close-cart-btn" aria-label="Close cart">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="cart-items" id="cart-items">
+        <!-- Cart items injected by JS -->
+      </div>
+      <div class="cart-special">
+        <textarea class="input" id="special-instructions" placeholder="Any special instructions for the kitchen?" rows="2"></textarea>
+      </div>
+      <div class="cart-summary">
+        <div class="cart-summary-row">
+          <span>Subtotal</span>
+          <span id="cart-subtotal">₹0</span>
+        </div>
+        <div class="cart-summary-row">
+          <span>Taxes & Charges</span>
+          <span id="cart-tax">₹0</span>
+        </div>
+        <div class="cart-summary-row cart-total-row">
+          <span>Total</span>
+          <span id="cart-total-final">₹0</span>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-lg cart-place-order" id="place-order-btn">
+        🍽️ Place Order
+      </button>
+    </div>
+  </div>
+
+  <!-- Dish Detail Modal -->
+  <div class="modal-overlay" id="dish-modal-overlay">
+    <div class="modal dish-modal" id="dish-modal">
+      <div class="dish-modal-image" id="dish-modal-image">
+        <button class="btn btn-icon dish-modal-close" id="dish-modal-close" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="dish-modal-body" id="dish-modal-body">
+        <!-- Content injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Tracker -->
+  <div class="order-tracker-overlay" id="order-tracker-overlay" style="display:none">
+    <div class="order-tracker glass-strong" id="order-tracker">
+      <div class="tracker-header">
+        <h2>Order Placed! 🎉</h2>
+        <span class="tracker-order-number" id="tracker-order-number">#0326-001</span>
+      </div>
+      <div class="tracker-timeline" id="tracker-timeline">
+        <!-- Steps injected by JS -->
+      </div>
+      <div class="tracker-details" id="tracker-details"></div>
+      <button class="btn btn-secondary" id="tracker-new-order">Order More Items</button>
+    </div>
+  </div>
+
+  <script type="module" src="/js/menu-app.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "name": "RestroDyn",
+  "short_name": "RestroDyn",
+  "description": "Smart QR-based restaurant ordering system. Scan, order, enjoy.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A1A",
+  "theme_color": "#FFC107",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["food", "business"],
+  "scope": "/",
+  "lang": "en"
+}
