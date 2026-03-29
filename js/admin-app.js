@@ -43,24 +43,8 @@ const mobileThemeSlot = document.getElementById('mobile-theme-slot');
 if (themeSlot) themeSlot.appendChild(createThemeToggle());
 if (mobileThemeSlot) mobileThemeSlot.appendChild(createThemeToggle());
 
-// ── Subscription Banner ──
-const subStatus = getSubscriptionStatus();
-const banner = document.getElementById('subscription-banner');
-if (banner) {
-  if (subStatus.status === 'trial') {
-    banner.className = 'sub-banner sub-banner-trial';
-    banner.innerHTML = `🧪 <strong>Free Trial</strong> — ${subStatus.daysRemaining} days remaining. <a href="#" class="sub-banner-link" onclick="return false">Upgrade now</a>`;
-    banner.style.display = 'flex';
-  } else if (subStatus.status === 'expired' || !subStatus.valid) {
-    banner.className = 'sub-banner sub-banner-expired';
-    banner.innerHTML = `⚠️ <strong>Subscription Expired</strong> — Your features are limited. <a href="#" class="sub-banner-link" onclick="return false">Renew now</a>`;
-    banner.style.display = 'flex';
-  } else if (subStatus.status === 'active') {
-    banner.className = 'sub-banner sub-banner-active';
-    banner.innerHTML = `✅ <strong>${subStatus.plan}</strong> plan active — ${subStatus.daysRemaining} days remaining`;
-    banner.style.display = 'flex';
-  }
-}
+
+
 
 // Update sidebar brand with restaurant name
 const sidebarBrand = document.querySelector('.sidebar-brand a');
