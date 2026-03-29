@@ -705,7 +705,7 @@ document.getElementById('generate-qr-btn').addEventListener('click', async () =>
       // Powered by text
       ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
       ctx.font = '400 9px "Inter", sans-serif';
-      ctx.fillText('Powered by RestroDyn SaaS Platform', 200, 555);
+      ctx.fillText('Powered by RestroDyn Platform', 200, 555);
 
       const templateDataUrl = tCanvas.toDataURL('image/png');
 
