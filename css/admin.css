@@ -15,6 +15,7 @@
   z-index: var(--z-sticky);
   border-right: 1px solid var(--border-color);
   transition: transform var(--transition-base);
+  background: var(--bg-secondary);
 }
 
 .admin-main {
@@ -40,16 +41,18 @@
   .admin-sidebar {
     transform: translateX(-100%);
     z-index: var(--z-modal);
+    background: var(--bg-secondary);
   }
   .admin-sidebar.open {
     transform: translateX(0);
   }
   .admin-main {
     margin-left: 0;
-    padding-top: calc(60px + var(--space-xl));
+    padding: calc(60px + var(--space-xl)) var(--space-md) var(--space-xl);
   }
   .admin-mobile-header {
     display: flex;
+    background: var(--bg-secondary);
   }
 }
 
@@ -422,7 +425,7 @@
 
 .qr-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: var(--space-lg);
 }
 
@@ -438,6 +441,21 @@
 }
 
 .qr-card:hover { transform: translateY(-2px); }
+
+.qr-template-card {
+  background: var(--bg-tertiary);
+  padding: var(--space-md);
+  gap: var(--space-md);
+}
+
+.qr-template-card:hover {
+  box-shadow: 0 8px 30px rgba(255, 193, 7, 0.15);
+}
+
+.qr-template-img {
+  width: 100%;
+  border-radius: var(--radius-md);
+}
 
 .qr-card canvas {
   margin-bottom: var(--space-md);

@@ -176,12 +176,8 @@ loginForm.addEventListener('submit', (e) => {
   }, 400);
 });
 
-// ── Fill Demo Credentials ──
-document.getElementById('fill-demo-btn')?.addEventListener('click', () => {
-  document.getElementById('login-email').value = 'demo@restrodyn.app';
-  document.getElementById('login-password').value = 'demo123';
-  showToast({ title: 'Demo credentials filled', type: 'info', duration: 1500 });
-});
+
+
 
 // Check URL params for auto-switch
 const urlParams = new URLSearchParams(window.location.search);

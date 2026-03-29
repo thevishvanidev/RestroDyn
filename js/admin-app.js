@@ -581,29 +581,159 @@ document.getElementById('generate-qr-btn').addEventListener('click', async () =>
     const QRCode = (await import('qrcode')).default;
     const baseUrl = window.location.origin;
     const slug = restaurant?.slug || 'demo';
+    const settings = getSettings();
+    const restaurantName = settings.restaurantName || restaurant?.name || 'RestroDyn';
 
     let html = '';
     for (let i = 1; i <= count; i++) {
       const url = `${baseUrl}/menu.html?restaurant=${slug}&table=${i}`;
-      const canvas = document.createElement('canvas');
-      await QRCode.toCanvas(canvas, url, {
-        width: 160,
+      
+      // Generate QR on hidden canvas
+      const qrCanvas = document.createElement('canvas');
+      await QRCode.toCanvas(qrCanvas, url, {
+        width: 200,
         margin: 2,
         color: { dark: '#1A1A2E', light: '#FFFFFF' },
       });
-      const dataUrl = canvas.toDataURL();
+
+      // Create branded template canvas
+      const tCanvas = document.createElement('canvas');
+      tCanvas.width = 400;
+      tCanvas.height = 580;
+      const ctx = tCanvas.getContext('2d');
+
+      // Background gradient (3D feel)
+      const bgGrad = ctx.createLinearGradient(0, 0, 400, 580);
+      bgGrad.addColorStop(0, '#0D0D2B');
+      bgGrad.addColorStop(0.3, '#141432');
+      bgGrad.addColorStop(0.7, '#1A1A3E');
+      bgGrad.addColorStop(1, '#0D0D2B');
+      ctx.fillStyle = bgGrad;
+      ctx.beginPath();
+      ctx.roundRect(0, 0, 400, 580, 24);
+      ctx.fill();
+
+      // Decorative top glow
+      const glowGrad = ctx.createRadialGradient(200, 0, 0, 200, 0, 250);
+      glowGrad.addColorStop(0, 'rgba(255, 193, 7, 0.20)');
+      glowGrad.addColorStop(1, 'rgba(255, 193, 7, 0)');
+      ctx.fillStyle = glowGrad;
+      ctx.fillRect(0, 0, 400, 250);
+
+      // Decorative bottom glow
+      const btmGlow = ctx.createRadialGradient(200, 580, 0, 200, 580, 200);
+      btmGlow.addColorStop(0, 'rgba(255, 107, 107, 0.10)');
+      btmGlow.addColorStop(1, 'rgba(255, 107, 107, 0)');
+      ctx.fillStyle = btmGlow;
+      ctx.fillRect(0, 380, 400, 200);
+
+      // Side accent lines (3D depth)
+      ctx.strokeStyle = 'rgba(255, 193, 7, 0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(8, 8, 384, 564, 20);
+      ctx.stroke();
+
+      // Restaurant name
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 22px "Outfit", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(restaurantName, 200, 48);
+
+      // Divider line
+      const divGrad = ctx.createLinearGradient(60, 0, 340, 0);
+      divGrad.addColorStop(0, 'rgba(255, 193, 7, 0)');
+      divGrad.addColorStop(0.5, 'rgba(255, 193, 7, 0.5)');
+      divGrad.addColorStop(1, 'rgba(255, 193, 7, 0)');
+      ctx.strokeStyle = divGrad;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(60, 62);
+      ctx.lineTo(340, 62);
+      ctx.stroke();
+
+      // "Scan to Order" text
+      ctx.fillStyle = '#FFC107';
+      ctx.font = '600 14px "Inter", sans-serif';
+      ctx.fillText('✨ SCAN TO ORDER ✨', 200, 88);
+
+      // White QR background with rounded corners
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.roundRect(85, 104, 230, 230, 16);
+      ctx.fill();
+
+      // Shadow behind QR
+      ctx.shadowColor = 'rgba(255, 193, 7, 0.25)';
+      ctx.shadowBlur = 30;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 4;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.roundRect(85, 104, 230, 230, 16);
+      ctx.fill();
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+
+      // Draw QR code centered
+      ctx.drawImage(qrCanvas, 100, 119, 200, 200);
+
+      // Table number badge
+      ctx.fillStyle = '#FFC107';
+      ctx.beginPath();
+      ctx.roundRect(130, 350, 140, 42, 21);
+      ctx.fill();
+      ctx.fillStyle = '#1A1A2E';
+      ctx.font = 'bold 18px "Outfit", sans-serif';
+      ctx.fillText(`Table ${i}`, 200, 377);
+
+      // Decorative dots
+      ctx.fillStyle = 'rgba(255, 193, 7, 0.3)';
+      for (let d = 0; d < 5; d++) {
+        ctx.beginPath();
+        ctx.arc(140 + d * 30, 412, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Bottom divider
+      ctx.strokeStyle = divGrad;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(60, 430);
+      ctx.lineTo(340, 430);
+      ctx.stroke();
+
+      // RestroDyn branding
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 20px "Outfit", sans-serif';
+      ctx.fillText('🍽️ RestroDyn', 200, 462);
+
+      // By VIAN GROUP
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.font = '500 11px "Inter", sans-serif';
+      ctx.fillText('By VIAN GROUP', 200, 484);
+
+      // Website
+      ctx.fillStyle = '#FFC107';
+      ctx.font = '600 13px "Inter", sans-serif';
+      ctx.fillText('www.restrodyn.in', 200, 510);
+
+      // Powered by text
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.font = '400 9px "Inter", sans-serif';
+      ctx.fillText('Powered by RestroDyn SaaS Platform', 200, 555);
+
+      const templateDataUrl = tCanvas.toDataURL('image/png');
 
       html += `
-        <div class="qr-card">
-          <img src="${dataUrl}" alt="QR Code Table ${i}" width="160" height="160" />
-          <div class="qr-card-label">Table ${i}</div>
-          <div class="qr-card-sub">${url}</div>
-          <a href="${dataUrl}" download="${slug}-table-${i}.png" class="btn btn-sm btn-secondary">⬇️ Download</a>
+        <div class="qr-card qr-template-card">
+          <img src="${templateDataUrl}" alt="QR Template Table ${i}" class="qr-template-img" />
+          <a href="${templateDataUrl}" download="${slug}-table-${i}-qr.png" class="btn btn-sm btn-primary" style="width:100%">⬇️ Download Template</a>
         </div>
       `;
     }
     grid.innerHTML = html;
-    showToast({ title: `${count} QR codes generated`, type: 'success' });
+    showToast({ title: `${count} QR templates generated`, type: 'success' });
   } catch (e) {
     grid.innerHTML = '<div class="empty-state"><h3>Failed to generate QR codes</h3></div>';
     console.error(e);

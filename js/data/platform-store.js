@@ -95,7 +95,8 @@ export function getRestaurantBySlug(slug) {
 }
 
 export function getRestaurantByEmail(email) {
-  return getAllRestaurants().find(r => r.email === email);
+  const normalizedEmail = email.toLowerCase().trim();
+  return getAllRestaurants().find(r => r.email.toLowerCase().trim() === normalizedEmail);
 }
 
 function generateSlug(name) {
@@ -137,7 +138,7 @@ export function registerRestaurant(data) {
     name: data.name,
     ownerName: data.ownerName || '',
     slug: generateSlug(data.name),
-    email: data.email,
+    email: data.email.toLowerCase().trim(),
     password: simpleHash(data.password),
     phone: data.phone || '',
     address: data.address || '',

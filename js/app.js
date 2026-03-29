@@ -25,8 +25,7 @@ if (themeContainer) {
 // Trust counter
 const trustCount = document.getElementById('landing-trust-count');
 if (trustCount) {
-  const restaurants = getAllRestaurants();
-  trustCount.textContent = restaurants.length;
+  trustCount.textContent = '100+';
 }
 
 // Pricing section
@@ -96,4 +95,70 @@ let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
+  showInstallBanner();
 });
+
+function showInstallBanner() {
+  // Don't show if dismissed recently
+  const dismissed = localStorage.getItem('restrodyn_install_dismissed');
+  if (dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000) return;
+
+  // Only show on mobile / tablet
+  if (window.innerWidth > 768 && !deferredPrompt) return;
+
+  // Don't show if already installed (standalone mode)
+  if (window.matchMedia('(display-mode: standalone)').matches) return;
+
+  // Remove existing banner if any
+  document.getElementById('pwa-install-banner')?.remove();
+
+  const banner = document.createElement('div');
+  banner.id = 'pwa-install-banner';
+  banner.innerHTML = `
+    <div class="pwa-banner-content">
+      <div class="pwa-banner-icon">🍽️</div>
+      <div class="pwa-banner-text">
+        <strong>Download RestroDyn App</strong>
+        <span>Get the best experience with our app</span>
+      </div>
+    </div>
+    <div class="pwa-banner-actions">
+      <button class="btn btn-primary btn-sm" id="pwa-install-btn">Install</button>
+      <button class="pwa-banner-close" id="pwa-dismiss-btn">✕</button>
+    </div>
+  `;
+  document.body.appendChild(banner);
+
+  // Show with animation
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      banner.classList.add('visible');
+    });
+  });
+
+  document.getElementById('pwa-install-btn').addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        banner.classList.remove('visible');
+        setTimeout(() => banner.remove(), 400);
+      }
+      deferredPrompt = null;
+    } else {
+      // iOS fallback
+      alert('To install: tap the Share button (↑) in your browser, then "Add to Home Screen".');
+    }
+  });
+
+  document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
+    localStorage.setItem('restrodyn_install_dismissed', Date.now().toString());
+    banner.classList.remove('visible');
+    setTimeout(() => banner.remove(), 400);
+  });
+}
+
+// Also show on iOS after delay
+if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.matchMedia('(display-mode: standalone)').matches) {
+  setTimeout(() => showInstallBanner(), 3000);
+}
