@@ -18,9 +18,8 @@ if (isLoggedIn()) {
 }
 
 // Update trust count
-const restaurants = getAllRestaurants();
 const trustCount = document.getElementById('trust-count');
-if (trustCount) trustCount.textContent = restaurants.length;
+if (trustCount) trustCount.textContent = '100+';
 
 // ── State ──
 let activeTab = 'register';
