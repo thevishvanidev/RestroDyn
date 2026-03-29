@@ -81,6 +81,7 @@
 
 .nav-mobile-toggle {
   display: none;
+  color: var(--text-primary);
 }
 
 .nav-mobile-menu {
