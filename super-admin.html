@@ -58,6 +58,10 @@
           <span class="sidebar-icon">💳</span>
           <span>Subscriptions</span>
         </button>
+        <button class="sidebar-link" data-section="sa-payment-methods" id="sa-nav-payment-methods">
+          <span class="sidebar-icon">💰</span>
+          <span>Payment Methods</span>
+        </button>
         <button class="sidebar-link" data-section="sa-settings" id="sa-nav-settings">
           <span class="sidebar-icon">⚙️</span>
           <span>Settings</span>
@@ -150,6 +154,99 @@
         <div class="sa-payment-history glass" style="margin-top:var(--space-2xl)">
           <h3>Payment History (Simulated)</h3>
           <div id="sa-payment-list">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Payment Methods -->
+      <section class="sa-section" id="section-sa-payment-methods">
+        <div class="section-top">
+          <div>
+            <h1>Payment Methods</h1>
+            <p class="section-desc">Configure how restaurants pay their subscription bills</p>
+          </div>
+        </div>
+
+        <!-- QR Code Upload -->
+        <div class="pm-card glass">
+          <div class="pm-card-header">
+            <span class="pm-card-icon">📱</span>
+            <h3>QR Code</h3>
+          </div>
+          <p class="pm-card-desc">Upload a payment QR code that restaurants can scan to pay</p>
+          <div class="pm-qr-upload-area" id="pm-qr-upload-area">
+            <div class="pm-qr-placeholder" id="pm-qr-placeholder">
+              <div class="pm-upload-icon">📸</div>
+              <p>Drop QR code image here or click to browse</p>
+              <span>JPG, PNG, WebP • Recommended: 400×400px</span>
+              <button type="button" class="btn btn-sm btn-secondary" id="pm-qr-browse">Browse Files</button>
+            </div>
+            <div class="pm-qr-preview" id="pm-qr-preview">
+              <img src="" alt="QR Preview" id="pm-qr-preview-img" />
+              <button type="button" class="pm-qr-remove" id="pm-qr-remove">✕</button>
+            </div>
+            <input type="file" id="pm-qr-file" accept="image/jpeg,image/png,image/webp" hidden />
+          </div>
+          <button class="btn btn-primary" id="pm-save-qr">💾 Save QR Code</button>
+        </div>
+
+        <!-- UPI ID -->
+        <div class="pm-card glass">
+          <div class="pm-card-header">
+            <span class="pm-card-icon">🔗</span>
+            <h3>UPI ID</h3>
+          </div>
+          <p class="pm-card-desc">Set the UPI ID where restaurants will send payments</p>
+          <div class="input-group">
+            <label>UPI ID</label>
+            <input type="text" class="input" id="pm-upi-id" placeholder="e.g. business@upi" />
+          </div>
+          <button class="btn btn-primary" id="pm-save-upi">💾 Save UPI ID</button>
+        </div>
+
+        <!-- Bank Account Details -->
+        <div class="pm-card glass">
+          <div class="pm-card-header">
+            <span class="pm-card-icon">🏦</span>
+            <h3>Bank Account (Direct Transfer)</h3>
+          </div>
+          <p class="pm-card-desc">Enter bank account details for direct transfers</p>
+          <div class="pm-bank-form">
+            <div class="input-group">
+              <label>Account Holder Name</label>
+              <input type="text" class="input" id="pm-bank-name" placeholder="e.g. RestroDyn Pvt Ltd" />
+            </div>
+            <div class="pm-bank-row">
+              <div class="input-group">
+                <label>Account Number</label>
+                <input type="text" class="input" id="pm-bank-account" placeholder="e.g. 1234567890" />
+              </div>
+              <div class="input-group">
+                <label>IFSC Code</label>
+                <input type="text" class="input" id="pm-bank-ifsc" placeholder="e.g. SBIN0001234" />
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Bank Name</label>
+              <input type="text" class="input" id="pm-bank-bankname" placeholder="e.g. State Bank of India" />
+            </div>
+          </div>
+          <button class="btn btn-primary" id="pm-save-bank">💾 Save Bank Details</button>
+        </div>
+
+        <!-- Pending Payment Verifications -->
+        <div class="pm-verifications">
+          <h3 class="pm-verify-title">📝 Pending Payment Verifications</h3>
+          <div id="pm-pending-list">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <!-- All Payment Records -->
+        <div class="pm-all-records" style="margin-top:var(--space-2xl)">
+          <h3 class="pm-verify-title">📜 All Payment Records</h3>
+          <div id="pm-all-payments-list">
             <!-- Injected by JS -->
           </div>
         </div>

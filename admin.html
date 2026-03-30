@@ -38,6 +38,10 @@
         <span class="sidebar-icon">📱</span>
         <span>QR Codes</span>
       </button>
+      <button class="sidebar-link" data-section="billpay" id="nav-billpay">
+        <span class="sidebar-icon">💳</span>
+        <span>Bill Pay</span>
+      </button>
       <button class="sidebar-link" data-section="settings" id="nav-settings">
         <span class="sidebar-icon">⚙️</span>
         <span>Settings</span>
@@ -138,6 +142,99 @@
       </div>
       <div class="qr-grid" id="qr-grid">
         <!-- QR codes injected by JS -->
+      </div>
+    </section>
+
+    <!-- Bill Pay -->
+    <section class="admin-section" id="section-billpay">
+      <div class="section-top">
+        <div>
+          <h1>Bill Pay</h1>
+          <p class="section-desc">Manage your subscription and make payments</p>
+        </div>
+      </div>
+
+      <!-- Current Subscription Status -->
+      <div class="bp-status-card glass" id="bp-status-card">
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Select Plan -->
+      <div class="bp-plans-section">
+        <h3 class="bp-section-title">📋 Choose a Plan</h3>
+        <div class="bp-plans-grid" id="bp-plans-grid">
+          <!-- Injected by JS -->
+        </div>
+      </div>
+
+      <!-- Payment Methods -->
+      <div class="bp-pay-section" id="bp-pay-section" style="display:none">
+        <h3 class="bp-section-title">💰 Make Payment</h3>
+        <div class="bp-selected-plan glass" id="bp-selected-plan"></div>
+
+        <!-- Payment method tabs -->
+        <div class="bp-method-tabs" id="bp-method-tabs">
+          <button class="bp-method-tab active" data-method="qr" id="bp-tab-qr">📱 Scan QR</button>
+          <button class="bp-method-tab" data-method="upi" id="bp-tab-upi">🔗 UPI</button>
+          <button class="bp-method-tab" data-method="bank" id="bp-tab-bank">🏦 Bank Transfer</button>
+        </div>
+
+        <!-- QR Method -->
+        <div class="bp-method-panel active" id="bp-panel-qr">
+          <div class="bp-qr-display glass" id="bp-qr-display">
+            <!-- QR image injected by JS -->
+          </div>
+        </div>
+
+        <!-- UPI Method -->
+        <div class="bp-method-panel" id="bp-panel-upi">
+          <div class="bp-upi-display glass" id="bp-upi-display">
+            <!-- UPI details injected by JS -->
+          </div>
+        </div>
+
+        <!-- Bank Transfer Method -->
+        <div class="bp-method-panel" id="bp-panel-bank">
+          <div class="bp-bank-display glass" id="bp-bank-display">
+            <!-- Bank details injected by JS -->
+          </div>
+        </div>
+
+        <!-- Upload Payment Proof -->
+        <div class="bp-proof-section glass">
+          <h4>📸 Submit Payment Proof</h4>
+          <p class="bp-proof-hint">Upload a screenshot of your payment or enter a transaction reference</p>
+          <div class="bp-proof-form" id="bp-proof-form">
+            <div class="bp-proof-upload" id="bp-proof-upload">
+              <div class="bp-proof-placeholder" id="bp-proof-placeholder">
+                <div class="bp-proof-icon">📤</div>
+                <p>Drop payment screenshot here</p>
+                <span>or click to browse • JPG, PNG, WebP • Max 2MB</span>
+                <button type="button" class="btn btn-sm btn-secondary" id="bp-proof-browse">Browse Files</button>
+              </div>
+              <div class="bp-proof-preview" id="bp-proof-preview">
+                <img src="" alt="Proof" id="bp-proof-img" />
+                <button type="button" class="bp-proof-remove" id="bp-proof-remove">✕</button>
+              </div>
+              <input type="file" id="bp-proof-file" accept="image/jpeg,image/png,image/webp" hidden />
+            </div>
+            <div class="input-group">
+              <label>Transaction / UTR Reference (optional)</label>
+              <input type="text" class="input" id="bp-tx-ref" placeholder="e.g. UTR123456789" />
+            </div>
+            <button class="btn btn-primary btn-lg" id="bp-submit-payment" style="width:100%">
+              🚀 Submit Payment for Verification
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment History -->
+      <div class="bp-history-section">
+        <h3 class="bp-section-title">📜 Payment History</h3>
+        <div class="bp-history-list" id="bp-history-list">
+          <!-- Injected by JS -->
+        </div>
       </div>
     </section>
 

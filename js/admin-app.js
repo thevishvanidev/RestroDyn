@@ -10,7 +10,7 @@ import {
   getOrders, getTodayOrders, updateOrderStatus, resetAll,
   setStoreNamespace
 } from './data/store.js';
-import { getRestaurant } from './data/platform-store.js';
+import { getRestaurant, getPlatformConfig, submitPayment, getPaymentsByRestaurant } from './data/platform-store.js';
 import { getSession, requireAuth, getRestaurantId, getSubscriptionStatus, logout } from './data/auth.js';
 import { broadcast, EVENTS } from './data/broadcast.js';
 import { formatCurrency, formatTime, getStatusInfo, timeAgo, formatDate } from './utils/helpers.js';
@@ -69,7 +69,7 @@ function switchSection(section) {
   document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
   document.getElementById(`section-${section}`)?.classList.add('active');
   
-  const titles = { dashboard: 'Dashboard', menu: 'Menu', orders: 'Orders', qr: 'QR Codes', settings: 'Settings' };
+  const titles = { dashboard: 'Dashboard', menu: 'Menu', orders: 'Orders', qr: 'QR Codes', billpay: 'Bill Pay', settings: 'Settings' };
   document.getElementById('mobile-title').textContent = titles[section] || section;
 
   // Close mobile sidebar
@@ -80,6 +80,7 @@ function switchSection(section) {
   if (section === 'dashboard') renderDashboard();
   else if (section === 'menu') renderMenuSection();
   else if (section === 'orders') renderOrders();
+  else if (section === 'billpay') renderBillPay();
   else if (section === 'settings') loadSettings();
 }
 
@@ -722,6 +723,320 @@ document.getElementById('generate-qr-btn').addEventListener('click', async () =>
     grid.innerHTML = '<div class="empty-state"><h3>Failed to generate QR codes</h3></div>';
     console.error(e);
   }
+});
+
+// ══════════════════════════════════════════
+//  BILL PAY SECTION
+// ══════════════════════════════════════════
+
+let selectedPlanId = null;
+let selectedPaymentMethod = 'qr';
+let billPayProofData = '';
+
+function renderBillPay() {
+  const subStatus = getSubscriptionStatus();
+  const config = getPlatformConfig();
+  const plans = config.subscriptionPlans;
+  const payments = getPaymentsByRestaurant(restaurantId);
+
+  // ── Subscription Status Card ──
+  const statusCard = document.getElementById('bp-status-card');
+  let statusIcon, statusLabel, statusClass, expiryText;
+
+  if (subStatus.status === 'trial') {
+    statusIcon = '🧪';
+    statusLabel = 'Free Trial';
+    statusClass = 'bp-status-trial';
+    expiryText = subStatus.daysRemaining !== null ? `${subStatus.daysRemaining} days remaining` : '';
+  } else if (subStatus.status === 'active') {
+    statusIcon = '✅';
+    statusLabel = `Active — ${subStatus.plan}`;
+    statusClass = 'bp-status-active';
+    expiryText = subStatus.expiryDate ? `Expires ${formatDate(subStatus.expiryDate)}` : '';
+  } else if (subStatus.status === 'expired') {
+    statusIcon = '⏰';
+    statusLabel = 'Expired';
+    statusClass = 'bp-status-expired';
+    expiryText = 'Please renew your subscription';
+  } else {
+    statusIcon = '❓';
+    statusLabel = 'No Subscription';
+    statusClass = 'bp-status-none';
+    expiryText = 'Choose a plan to get started';
+  }
+
+  // Check for pending payments
+  const pendingPayment = payments.find(p => p.status === 'pending');
+
+  statusCard.innerHTML = `
+    <div class="bp-status-header ${statusClass}">
+      <div class="bp-status-icon">${statusIcon}</div>
+      <div class="bp-status-info">
+        <div class="bp-status-label">${statusLabel}</div>
+        <div class="bp-status-expiry">${expiryText}</div>
+      </div>
+      <div class="bp-status-badge">
+        <span class="badge badge-${subStatus.valid ? 'success' : 'warning'}">${subStatus.valid ? 'Active' : 'Renew'}</span>
+      </div>
+    </div>
+    ${pendingPayment ? `
+      <div class="bp-pending-banner">
+        <span class="bp-pending-icon">⏳</span>
+        <span>Payment of ₹${pendingPayment.amount} submitted for <strong>${pendingPayment.planName}</strong> — <em>Pending verification</em></span>
+      </div>
+    ` : ''}
+  `;
+
+  // ── Plans Grid ──
+  document.getElementById('bp-plans-grid').innerHTML = plans.map((plan, i) => `
+    <div class="bp-plan-card ${selectedPlanId === plan.id ? 'selected' : ''} ${i === 1 ? 'popular' : ''}" data-plan-id="${plan.id}">
+      ${i === 1 ? '<div class="bp-plan-popular-tag">⭐ Best Value</div>' : ''}
+      <div class="bp-plan-name">${plan.name}</div>
+      <div class="bp-plan-price">₹${plan.price}<span>/${plan.duration} days</span></div>
+      <ul class="bp-plan-features">
+        ${plan.features.map(f => `<li>${f}</li>`).join('')}
+      </ul>
+      <button class="btn ${selectedPlanId === plan.id ? 'btn-primary' : 'btn-secondary'} bp-plan-select-btn" data-plan-id="${plan.id}">
+        ${selectedPlanId === plan.id ? '✓ Selected' : 'Select Plan'}
+      </button>
+    </div>
+  `).join('');
+
+  // Plan selection
+  document.querySelectorAll('.bp-plan-select-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedPlanId = btn.dataset.planId;
+      renderBillPay();
+      document.getElementById('bp-pay-section').style.display = 'block';
+      document.getElementById('bp-pay-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  // ── Selected Plan Banner ──
+  if (selectedPlanId) {
+    const selectedPlan = plans.find(p => p.id === selectedPlanId);
+    document.getElementById('bp-pay-section').style.display = 'block';
+    document.getElementById('bp-selected-plan').innerHTML = `
+      <div class="bp-sp-info">
+        <span class="bp-sp-name">${selectedPlan.name} Plan</span>
+        <span class="bp-sp-price">₹${selectedPlan.price}</span>
+        <span class="bp-sp-duration">${selectedPlan.duration} days</span>
+      </div>
+    `;
+
+    // Render payment methods
+    renderPaymentMethods(config);
+  }
+
+  // ── Payment History ──
+  const sortedPayments = [...payments].sort((a, b) => b.submittedAt - a.submittedAt);
+  document.getElementById('bp-history-list').innerHTML = sortedPayments.length
+    ? sortedPayments.map(p => {
+        const statusBadge = p.status === 'approved'
+          ? '<span class="badge badge-success">✅ Approved</span>'
+          : p.status === 'rejected'
+          ? '<span class="badge badge-error">❌ Rejected</span>'
+          : '<span class="badge badge-warning">⏳ Pending</span>';
+        return `
+          <div class="bp-history-item">
+            <div class="bp-history-main">
+              <div class="bp-history-plan">${p.planName}</div>
+              <div class="bp-history-method">${p.paymentMethod}</div>
+              <div class="bp-history-date">${formatDate(p.submittedAt)}</div>
+            </div>
+            <div class="bp-history-right">
+              ${statusBadge}
+              <div class="bp-history-amount">₹${p.amount}</div>
+            </div>
+            ${p.status === 'rejected' && p.reviewNote ? `<div class="bp-history-note">Note: ${p.reviewNote}</div>` : ''}
+          </div>
+        `;
+      }).join('')
+    : '<div class="empty-state" style="padding:var(--space-xl) 0"><p style="color:var(--text-tertiary)">No payments yet</p></div>';
+}
+
+function renderPaymentMethods(config) {
+  const pm = config.paymentMethods || {};
+
+  // QR
+  document.getElementById('bp-qr-display').innerHTML = pm.qrImage
+    ? `
+      <div class="bp-qr-wrapper">
+        <p class="bp-method-label">Scan this QR code to pay</p>
+        <img src="${pm.qrImage}" alt="Payment QR" class="bp-qr-img" />
+        <p class="bp-method-hint">After payment, upload proof below</p>
+      </div>
+    `
+    : '<div class="bp-method-empty"><span>📱</span><p>QR code not configured yet. Contact support.</p></div>';
+
+  // UPI
+  document.getElementById('bp-upi-display').innerHTML = pm.upiId
+    ? `
+      <div class="bp-upi-wrapper">
+        <p class="bp-method-label">Pay via UPI</p>
+        <div class="bp-upi-id-display">
+          <span class="bp-upi-id-value">${pm.upiId}</span>
+          <button class="btn btn-sm btn-secondary bp-copy-upi" title="Copy UPI ID">📋 Copy</button>
+        </div>
+        <p class="bp-method-hint">Copy this UPI ID and pay using any UPI app</p>
+      </div>
+    `
+    : '<div class="bp-method-empty"><span>🔗</span><p>UPI ID not configured yet. Contact support.</p></div>';
+
+  // Copy UPI handler
+  document.querySelector('.bp-copy-upi')?.addEventListener('click', () => {
+    navigator.clipboard.writeText(pm.upiId).then(() => {
+      showToast({ title: 'UPI ID copied!', type: 'success' });
+    });
+  });
+
+  // Bank Transfer
+  const bank = pm.bankDetails || {};
+  document.getElementById('bp-bank-display').innerHTML = (bank.accountNumber && bank.ifscCode)
+    ? `
+      <div class="bp-bank-wrapper">
+        <p class="bp-method-label">Bank Transfer Details</p>
+        <div class="bp-bank-details-grid">
+          <div class="bp-bank-row">
+            <span class="bp-bank-label">Account Name</span>
+            <span class="bp-bank-value">${bank.accountName || '—'}</span>
+          </div>
+          <div class="bp-bank-row">
+            <span class="bp-bank-label">Account Number</span>
+            <span class="bp-bank-value">${bank.accountNumber}</span>
+          </div>
+          <div class="bp-bank-row">
+            <span class="bp-bank-label">IFSC Code</span>
+            <span class="bp-bank-value">${bank.ifscCode}</span>
+          </div>
+          <div class="bp-bank-row">
+            <span class="bp-bank-label">Bank Name</span>
+            <span class="bp-bank-value">${bank.bankName || '—'}</span>
+          </div>
+        </div>
+        <p class="bp-method-hint">Transfer the exact amount and upload proof below</p>
+      </div>
+    `
+    : '<div class="bp-method-empty"><span>🏦</span><p>Bank details not configured yet. Contact support.</p></div>';
+}
+
+// ── Payment Method Tabs ──
+document.querySelectorAll('.bp-method-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    selectedPaymentMethod = tab.dataset.method;
+    document.querySelectorAll('.bp-method-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.bp-method-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`bp-panel-${tab.dataset.method}`)?.classList.add('active');
+  });
+});
+
+// ── Payment Proof Upload ──
+function initProofUpload() {
+  const uploadZone = document.getElementById('bp-proof-upload');
+  const placeholder = document.getElementById('bp-proof-placeholder');
+  const preview = document.getElementById('bp-proof-preview');
+  const previewImg = document.getElementById('bp-proof-img');
+  const fileInput = document.getElementById('bp-proof-file');
+  const browseBtn = document.getElementById('bp-proof-browse');
+  const removeBtn = document.getElementById('bp-proof-remove');
+
+  function handleProofFile(file) {
+    if (!file) return;
+    if (!file.type.match(/^image\/(jpeg|png|webp)$/)) {
+      showToast({ title: 'Invalid file type', message: 'Please upload JPG, PNG, or WebP', type: 'error' });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      showToast({ title: 'File too large', message: 'Max 2MB', type: 'error' });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      billPayProofData = e.target.result;
+      previewImg.src = billPayProofData;
+      placeholder.style.display = 'none';
+      preview.classList.add('active');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  browseBtn?.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); fileInput.click(); });
+
+  uploadZone?.addEventListener('click', (e) => {
+    if (e.target === uploadZone || e.target.closest('#bp-proof-placeholder')) {
+      if (!e.target.closest('#bp-proof-browse')) fileInput.click();
+    }
+  });
+
+  fileInput?.addEventListener('change', () => handleProofFile(fileInput.files[0]));
+
+  uploadZone?.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone?.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone?.addEventListener('drop', (e) => {
+    e.preventDefault(); uploadZone.classList.remove('dragover');
+    handleProofFile(e.dataTransfer.files[0]);
+  });
+
+  removeBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    billPayProofData = '';
+    previewImg.src = '';
+    preview.classList.remove('active');
+    placeholder.style.display = '';
+    fileInput.value = '';
+  });
+}
+
+initProofUpload();
+
+// ── Submit Payment ──
+document.getElementById('bp-submit-payment')?.addEventListener('click', () => {
+  if (!selectedPlanId) {
+    showToast({ title: 'Select a plan first', type: 'error' });
+    return;
+  }
+
+  const config = getPlatformConfig();
+  const plan = config.subscriptionPlans.find(p => p.id === selectedPlanId);
+  if (!plan) return;
+
+  const methodLabels = { qr: 'QR Code Payment', upi: 'UPI Transfer', bank: 'Bank Transfer' };
+  const txRef = document.getElementById('bp-tx-ref')?.value?.trim() || '';
+
+  // Check if there's already a pending payment
+  const existingPending = getPaymentsByRestaurant(restaurantId).find(p => p.status === 'pending');
+  if (existingPending) {
+    showToast({ title: 'Payment already pending', message: 'Wait for verification of your previous payment', type: 'warning' });
+    return;
+  }
+
+  if (!billPayProofData && !txRef) {
+    showToast({ title: 'Proof required', message: 'Upload a screenshot or enter a transaction reference', type: 'error' });
+    return;
+  }
+
+  submitPayment({
+    restaurantId,
+    restaurantName: restaurant?.name || 'Unknown',
+    planId: plan.id,
+    planName: plan.name,
+    amount: plan.price,
+    duration: plan.duration,
+    paymentMethod: methodLabels[selectedPaymentMethod] || selectedPaymentMethod,
+    proofImage: billPayProofData,
+    upiRef: selectedPaymentMethod === 'upi' ? txRef : '',
+    bankRef: selectedPaymentMethod === 'bank' ? txRef : '',
+  });
+
+  showToast({ title: 'Payment submitted!', message: 'Your payment is under review', type: 'success' });
+
+  // Reset state
+  selectedPlanId = null;
+  billPayProofData = '';
+  document.getElementById('bp-tx-ref').value = '';
+  document.getElementById('bp-pay-section').style.display = 'none';
+  renderBillPay();
 });
 
 // ══════════════════════════════════════════

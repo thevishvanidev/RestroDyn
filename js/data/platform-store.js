@@ -6,6 +6,7 @@ const PLATFORM_KEYS = {
   CONFIG: 'restrodyn_platform_config',
   SUPER_ADMIN: 'restrodyn_super_admin',
   PLATFORM_INIT: 'restrodyn_platform_initialized',
+  PAYMENT_RECORDS: 'restrodyn_payment_records',
 };
 
 function pGet(key) {
@@ -35,6 +36,16 @@ const DEFAULT_CONFIG = {
   commission: 0,
   platformName: 'RestroDyn',
   supportEmail: 'support@restrodyn.app',
+  paymentMethods: {
+    qrImage: '',
+    upiId: '',
+    bankDetails: {
+      accountName: '',
+      accountNumber: '',
+      ifscCode: '',
+      bankName: '',
+    },
+  },
 };
 
 export function getPlatformConfig() {
@@ -249,10 +260,15 @@ export function getPlatformStats() {
     .filter(r => r.subscription?.status === 'active' && r.subscription?.startDate >= monthStart.getTime())
     .reduce((sum, r) => sum + (r.subscription?.amount || 0), 0);
 
+  // Pending payments
+  const allPayments = getPaymentRecords();
+  const pendingPayments = allPayments.filter(p => p.status === 'pending').length;
+
   return {
     totalRestaurants: restaurants.length,
     active,
     suspended,
+    pendingPayments,
     trial,
     paid,
     expired,
@@ -308,4 +324,82 @@ export function initializePlatform() {
 
   markPlatformInitialized();
   console.log('🌐 RestroDyn Platform: Initialized with demo restaurant');
+}
+
+// ══════════════════════════════════════════
+//  PAYMENT RECORDS
+// ══════════════════════════════════════════
+
+export function getPaymentRecords() {
+  return pGet(PLATFORM_KEYS.PAYMENT_RECORDS) || [];
+}
+
+export function savePaymentRecords(records) {
+  pSet(PLATFORM_KEYS.PAYMENT_RECORDS, records);
+}
+
+export function getPaymentsByRestaurant(restaurantId) {
+  return getPaymentRecords().filter(p => p.restaurantId === restaurantId);
+}
+
+export function submitPayment(data) {
+  const records = getPaymentRecords();
+  const payment = {
+    id: crypto.randomUUID(),
+    restaurantId: data.restaurantId,
+    restaurantName: data.restaurantName,
+    planId: data.planId,
+    planName: data.planName,
+    amount: data.amount,
+    duration: data.duration,
+    paymentMethod: data.paymentMethod,
+    proofImage: data.proofImage || '',
+    upiRef: data.upiRef || '',
+    bankRef: data.bankRef || '',
+    status: 'pending',
+    submittedAt: Date.now(),
+    reviewedAt: null,
+    reviewNote: '',
+  };
+  records.push(payment);
+  savePaymentRecords(records);
+  return payment;
+}
+
+export function approvePayment(paymentId) {
+  const records = getPaymentRecords();
+  const payment = records.find(p => p.id === paymentId);
+  if (!payment) return null;
+
+  payment.status = 'approved';
+  payment.reviewedAt = Date.now();
+  savePaymentRecords(records);
+
+  // Activate the subscription for the restaurant
+  const config = getPlatformConfig();
+  const plan = config.subscriptionPlans.find(p => p.id === payment.planId);
+  if (plan) {
+    updateRestaurantSubscription(payment.restaurantId, {
+      plan: payment.planId,
+      amount: payment.amount,
+      status: 'active',
+      startDate: Date.now(),
+      expiryDate: Date.now() + (plan.duration * 24 * 60 * 60 * 1000),
+      paymentMethod: payment.paymentMethod,
+    });
+  }
+
+  return payment;
+}
+
+export function rejectPayment(paymentId, note = '') {
+  const records = getPaymentRecords();
+  const payment = records.find(p => p.id === paymentId);
+  if (!payment) return null;
+
+  payment.status = 'rejected';
+  payment.reviewedAt = Date.now();
+  payment.reviewNote = note;
+  savePaymentRecords(records);
+  return payment;
 }

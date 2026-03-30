@@ -564,6 +564,356 @@
   gap: var(--space-lg);
 }
 
+/* ══════════════════════════════════════════
+   PAYMENT METHODS SECTION
+   ══════════════════════════════════════════ */
+
+/* ── Payment Method Cards ── */
+.pm-card {
+  padding: var(--space-2xl);
+  margin-bottom: var(--space-xl);
+  max-width: 650px;
+}
+
+.pm-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.pm-card-icon {
+  font-size: 1.8rem;
+}
+
+.pm-card-header h3 {
+  font-size: var(--text-xl);
+  font-weight: 700;
+}
+
+.pm-card-desc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xl);
+}
+
+/* ── QR Upload ── */
+.pm-qr-upload-area {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  background: var(--bg-tertiary);
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-lg);
+  position: relative;
+}
+
+.pm-qr-upload-area:hover {
+  border-color: var(--primary-500);
+  background: rgba(255, 193, 7, 0.04);
+}
+
+.pm-qr-upload-area.dragover {
+  border-color: var(--primary-500);
+  background: rgba(255, 193, 7, 0.08);
+  border-style: solid;
+  box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.15);
+}
+
+.pm-qr-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-sm);
+}
+
+.pm-upload-icon {
+  font-size: 2.5rem;
+  transition: transform var(--transition-base);
+}
+
+.pm-qr-upload-area:hover .pm-upload-icon {
+  transform: scale(1.1);
+}
+
+.pm-qr-placeholder p {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.pm-qr-placeholder span {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.pm-qr-preview {
+  display: none;
+  position: relative;
+  max-width: 300px;
+}
+
+.pm-qr-preview.active {
+  display: block;
+}
+
+.pm-qr-preview img {
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-color);
+}
+
+.pm-qr-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 82, 82, 0.9);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.pm-qr-remove:hover {
+  background: var(--error);
+  transform: scale(1.1);
+}
+
+/* ── Bank form ── */
+.pm-bank-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.pm-bank-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+@media (max-width: 600px) {
+  .pm-bank-row { grid-template-columns: 1fr; }
+}
+
+/* ── Verification Section ── */
+.pm-verifications {
+  margin-top: var(--space-2xl);
+}
+
+.pm-verify-title {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  margin-bottom: var(--space-lg);
+}
+
+.pm-empty-state {
+  padding: var(--space-2xl);
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+/* ── Verification Card ── */
+.pm-verify-card {
+  padding: var(--space-xl);
+  margin-bottom: var(--space-lg);
+  border-left: 4px solid var(--warning);
+}
+
+.pm-verify-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.pm-verify-restaurant {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.pm-verify-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 193, 7, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.pm-verify-name {
+  font-weight: 700;
+  font-size: var(--text-md);
+}
+
+.pm-verify-date {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.pm-verify-amount {
+  font-family: 'Outfit', sans-serif;
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: var(--primary-500);
+}
+
+.pm-verify-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+}
+
+.pm-verify-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-sm);
+}
+
+.pm-verify-row span:first-child {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.pm-ref-value {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.3px;
+}
+
+/* ── Proof Image ── */
+.pm-verify-proof {
+  margin-bottom: var(--space-lg);
+}
+
+.pm-verify-proof-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+  color: var(--text-secondary);
+}
+
+.pm-proof-img {
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-color);
+  cursor: pointer;
+  transition: transform var(--transition-base);
+}
+
+.pm-proof-img:hover {
+  transform: scale(1.02);
+}
+
+/* ── Verify Actions ── */
+.pm-verify-actions {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.pm-verify-actions .btn {
+  flex: 1;
+}
+
+/* ── Payment Records List ── */
+.pm-record-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  padding: var(--space-lg) var(--space-xl);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-sm);
+  flex-wrap: wrap;
+  transition: all var(--transition-fast);
+  font-size: var(--text-sm);
+}
+
+.pm-record-row:hover {
+  border-color: rgba(255, 193, 7, 0.15);
+}
+
+.pm-record-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.pm-record-name {
+  font-weight: 600;
+}
+
+.pm-record-method {
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.pm-record-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.pm-record-amount {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  color: var(--primary-500);
+}
+
+.pm-record-date {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.pm-record-note {
+  width: 100%;
+  font-size: var(--text-xs);
+  color: var(--error);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-color);
+  margin-top: var(--space-sm);
+}
+
 /* ── Sidebar Overlay (mobile) ── */
 .sa-sidebar-overlay {
   position: fixed;
@@ -611,6 +961,28 @@
 
   .sa-plans-grid {
     grid-template-columns: 1fr;
+  }
+
+  .pm-card {
+    max-width: 100%;
+  }
+
+  .pm-verify-card {
+    padding: var(--space-lg);
+  }
+
+  .pm-verify-actions {
+    flex-direction: column;
+  }
+
+  .pm-record-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pm-record-right {
+    width: 100%;
+    justify-content: space-between;
   }
 }
 

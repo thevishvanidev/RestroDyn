@@ -8,6 +8,7 @@ import {
   getPlatformStats, verifySuperAdmin, getSuperAdmin, saveSuperAdmin,
   updateRestaurant, suspendRestaurant, activateRestaurant, deleteRestaurant,
   updateRestaurantSubscription, initializePlatform,
+  getPaymentRecords, approvePayment, rejectPayment,
 } from './data/platform-store.js';
 import {
   isSuperAdminLoggedIn, setSuperAdminSession,
@@ -74,6 +75,7 @@ function switchSection(section) {
     'sa-dashboard': 'Dashboard',
     'sa-restaurants': 'Restaurants',
     'sa-subscriptions': 'Subscriptions',
+    'sa-payment-methods': 'Payment Methods',
     'sa-settings': 'Settings',
   };
   document.getElementById('sa-mobile-title').textContent = titles[section] || '';
@@ -85,6 +87,7 @@ function switchSection(section) {
   if (section === 'sa-dashboard') renderDashboard();
   else if (section === 'sa-restaurants') renderRestaurants();
   else if (section === 'sa-subscriptions') renderSubscriptions();
+  else if (section === 'sa-payment-methods') renderPaymentMethods();
   else if (section === 'sa-settings') loadSettings();
 }
 
@@ -131,6 +134,11 @@ function renderDashboard() {
       <div class="sa-stat-card-icon">💳</div>
       <div class="sa-stat-card-value">${stats.paid}</div>
       <div class="sa-stat-card-label">Paid Subscriptions</div>
+    </div>
+    <div class="sa-stat-card">
+      <div class="sa-stat-card-icon">📝</div>
+      <div class="sa-stat-card-value">${stats.pendingPayments}</div>
+      <div class="sa-stat-card-label">Pending Payments</div>
     </div>
     <div class="sa-stat-card">
       <div class="sa-stat-card-icon">🚫</div>
@@ -471,6 +479,228 @@ document.getElementById('sa-change-password-btn').addEventListener('click', () =
   document.getElementById('sa-current-password').value = '';
   document.getElementById('sa-new-password').value = '';
   showToast({ title: 'Password changed', type: 'success' });
+});
+
+// ═══════════════════════════════════════
+//  PAYMENT METHODS
+// ═══════════════════════════════════════
+
+let pmQrImageData = '';
+
+function renderPaymentMethods() {
+  const config = getPlatformConfig();
+  const pm = config.paymentMethods || {};
+
+  // Load existing values
+  document.getElementById('pm-upi-id').value = pm.upiId || '';
+  document.getElementById('pm-bank-name').value = pm.bankDetails?.accountName || '';
+  document.getElementById('pm-bank-account').value = pm.bankDetails?.accountNumber || '';
+  document.getElementById('pm-bank-ifsc').value = pm.bankDetails?.ifscCode || '';
+  document.getElementById('pm-bank-bankname').value = pm.bankDetails?.bankName || '';
+
+  // QR Preview
+  pmQrImageData = pm.qrImage || '';
+  const placeholder = document.getElementById('pm-qr-placeholder');
+  const preview = document.getElementById('pm-qr-preview');
+  const previewImg = document.getElementById('pm-qr-preview-img');
+
+  if (pmQrImageData) {
+    placeholder.style.display = 'none';
+    preview.classList.add('active');
+    previewImg.src = pmQrImageData;
+  } else {
+    placeholder.style.display = '';
+    preview.classList.remove('active');
+    previewImg.src = '';
+  }
+
+  // Render pending payments
+  renderPendingPayments();
+  renderAllPayments();
+}
+
+function renderPendingPayments() {
+  const records = getPaymentRecords().filter(p => p.status === 'pending');
+  const container = document.getElementById('pm-pending-list');
+
+  if (!records.length) {
+    container.innerHTML = '<div class="pm-empty-state"><p>✅ No pending payments to verify</p></div>';
+    return;
+  }
+
+  container.innerHTML = records.map(p => `
+    <div class="pm-verify-card glass">
+      <div class="pm-verify-header">
+        <div class="pm-verify-restaurant">
+          <div class="pm-verify-avatar">🏨</div>
+          <div>
+            <div class="pm-verify-name">${p.restaurantName}</div>
+            <div class="pm-verify-date">${formatDate(p.submittedAt)}</div>
+          </div>
+        </div>
+        <div class="pm-verify-amount">₹${p.amount}</div>
+      </div>
+      <div class="pm-verify-details">
+        <div class="pm-verify-row">
+          <span>Plan</span>
+          <span class="badge badge-primary">${p.planName}</span>
+        </div>
+        <div class="pm-verify-row">
+          <span>Method</span>
+          <span>${p.paymentMethod}</span>
+        </div>
+        ${p.upiRef ? `<div class="pm-verify-row"><span>UPI Ref</span><span class="pm-ref-value">${p.upiRef}</span></div>` : ''}
+        ${p.bankRef ? `<div class="pm-verify-row"><span>Bank Ref</span><span class="pm-ref-value">${p.bankRef}</span></div>` : ''}
+      </div>
+      ${p.proofImage ? `
+        <div class="pm-verify-proof">
+          <p class="pm-verify-proof-label">📸 Payment Proof</p>
+          <img src="${p.proofImage}" alt="Payment proof" class="pm-proof-img" />
+        </div>
+      ` : ''}
+      <div class="pm-verify-actions">
+        <button class="btn btn-success pm-approve-btn" data-id="${p.id}">✅ Approve</button>
+        <button class="btn btn-danger pm-reject-btn" data-id="${p.id}">❌ Reject</button>
+      </div>
+    </div>
+  `).join('');
+
+  // Approve handlers
+  container.querySelectorAll('.pm-approve-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      approvePayment(btn.dataset.id);
+      showToast({ title: 'Payment approved!', message: 'Subscription activated for restaurant', type: 'success' });
+      renderPaymentMethods();
+    });
+  });
+
+  // Reject handlers
+  container.querySelectorAll('.pm-reject-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const note = prompt('Rejection reason (optional):') || '';
+      rejectPayment(btn.dataset.id, note);
+      showToast({ title: 'Payment rejected', type: 'warning' });
+      renderPaymentMethods();
+    });
+  });
+}
+
+function renderAllPayments() {
+  const records = getPaymentRecords()
+    .filter(p => p.status !== 'pending')
+    .sort((a, b) => (b.reviewedAt || b.submittedAt) - (a.reviewedAt || a.submittedAt));
+  const container = document.getElementById('pm-all-payments-list');
+
+  if (!records.length) {
+    container.innerHTML = '<div class="pm-empty-state"><p>No payment records yet</p></div>';
+    return;
+  }
+
+  container.innerHTML = records.map(p => {
+    const statusBadge = p.status === 'approved'
+      ? '<span class="badge badge-success">✅ Approved</span>'
+      : '<span class="badge badge-error">❌ Rejected</span>';
+    return `
+      <div class="pm-record-row">
+        <div class="pm-record-info">
+          <span class="pm-record-name">🏨 ${p.restaurantName}</span>
+          <span class="pm-record-plan badge badge-neutral">${p.planName}</span>
+          <span class="pm-record-method">${p.paymentMethod}</span>
+        </div>
+        <div class="pm-record-right">
+          ${statusBadge}
+          <span class="pm-record-amount">₹${p.amount}</span>
+          <span class="pm-record-date">${formatDate(p.reviewedAt || p.submittedAt)}</span>
+        </div>
+        ${p.reviewNote ? `<div class="pm-record-note">Note: ${p.reviewNote}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// ── QR Upload Handlers ──
+(function initPmQrUpload() {
+  const uploadArea = document.getElementById('pm-qr-upload-area');
+  const placeholder = document.getElementById('pm-qr-placeholder');
+  const preview = document.getElementById('pm-qr-preview');
+  const previewImg = document.getElementById('pm-qr-preview-img');
+  const fileInput = document.getElementById('pm-qr-file');
+  const browseBtn = document.getElementById('pm-qr-browse');
+  const removeBtn = document.getElementById('pm-qr-remove');
+
+  function handleQrFile(file) {
+    if (!file) return;
+    if (!file.type.match(/^image\/(jpeg|png|webp)$/)) {
+      showToast({ title: 'Invalid file type', type: 'error' });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast({ title: 'File too large', message: 'Max 5MB', type: 'error' });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      pmQrImageData = e.target.result;
+      previewImg.src = pmQrImageData;
+      placeholder.style.display = 'none';
+      preview.classList.add('active');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  browseBtn?.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); fileInput.click(); });
+  uploadArea?.addEventListener('click', (e) => {
+    if (e.target === uploadArea || e.target.closest('#pm-qr-placeholder')) {
+      if (!e.target.closest('#pm-qr-browse')) fileInput.click();
+    }
+  });
+  fileInput?.addEventListener('change', () => handleQrFile(fileInput.files[0]));
+  uploadArea?.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+  uploadArea?.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+  uploadArea?.addEventListener('drop', (e) => {
+    e.preventDefault(); uploadArea.classList.remove('dragover');
+    handleQrFile(e.dataTransfer.files[0]);
+  });
+  removeBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    pmQrImageData = '';
+    previewImg.src = '';
+    preview.classList.remove('active');
+    placeholder.style.display = '';
+    fileInput.value = '';
+  });
+})();
+
+// ── Save QR ──
+document.getElementById('pm-save-qr')?.addEventListener('click', () => {
+  const config = getPlatformConfig();
+  if (!config.paymentMethods) config.paymentMethods = {};
+  config.paymentMethods.qrImage = pmQrImageData;
+  savePlatformConfig(config);
+  showToast({ title: 'QR code saved!', type: 'success' });
+});
+
+// ── Save UPI ──
+document.getElementById('pm-save-upi')?.addEventListener('click', () => {
+  const config = getPlatformConfig();
+  if (!config.paymentMethods) config.paymentMethods = {};
+  config.paymentMethods.upiId = document.getElementById('pm-upi-id').value.trim();
+  savePlatformConfig(config);
+  showToast({ title: 'UPI ID saved!', type: 'success' });
+});
+
+// ── Save Bank ──
+document.getElementById('pm-save-bank')?.addEventListener('click', () => {
+  const config = getPlatformConfig();
+  if (!config.paymentMethods) config.paymentMethods = {};
+  config.paymentMethods.bankDetails = {
+    accountName: document.getElementById('pm-bank-name').value.trim(),
+    accountNumber: document.getElementById('pm-bank-account').value.trim(),
+    ifscCode: document.getElementById('pm-bank-ifsc').value.trim(),
+    bankName: document.getElementById('pm-bank-bankname').value.trim(),
+  };
+  savePlatformConfig(config);
+  showToast({ title: 'Bank details saved!', type: 'success' });
 });
 
 // Initial render
