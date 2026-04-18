@@ -162,22 +162,32 @@ loginForm.addEventListener('submit', (e) => {
   submitBtn.classList.add('loading');
   submitBtn.disabled = true;
 
-  setTimeout(() => {
-    const result = loginRestaurant(email, password);
+  (async () => {
+    try {
+      // Ensure we have the latest data from cloud before checking login
+      await syncPlatformData();
+      
+      const result = loginRestaurant(email, password);
 
-    if (result.success) {
-      setSession(result.restaurant);
-      showMessage('success', '✅', 'Login successful! Redirecting...');
+      if (result.success) {
+        setSession(result.restaurant);
+        showMessage('success', '✅', 'Login successful! Redirecting...');
 
-      setTimeout(() => {
-        window.location.href = '/admin.html';
-      }, 800);
-    } else {
-      showMessage('error', '❌', result.error);
+        setTimeout(() => {
+          window.location.href = '/admin.html';
+        }, 800);
+      } else {
+        showMessage('error', '❌', result.error);
+        submitBtn.classList.remove('loading');
+        submitBtn.disabled = false;
+      }
+    } catch (e) {
+      console.error('Login sync error:', e);
+      showMessage('error', '❌', 'Connection error. Please try again.');
       submitBtn.classList.remove('loading');
       submitBtn.disabled = false;
     }
-  }, 400);
+  })();
 });
 
 

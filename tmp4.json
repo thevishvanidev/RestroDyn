@@ -1,0 +1,136 @@
+﻿{
+    "name":  "projects/restrodyn/databases/(default)/documents/platform/restaurants",
+    "fields":  {
+                   "updatedAt":  {
+                                     "integerValue":  "1776538287419"
+                                 },
+                   "value":  {
+                                 "arrayValue":  {
+                                                    "values":  [
+                                                                   {
+                                                                       "mapValue":  {
+                                                                                        "fields":  {
+                                                                                                       "phone":  {
+                                                                                                                     "stringValue":  "+91-9876543210"
+                                                                                                                 },
+                                                                                                       "address":  {
+                                                                                                                       "stringValue":  "123 Food Street, Mumbai"
+                                                                                                                   },
+                                                                                                       "createdAt":  {
+                                                                                                                         "integerValue":  "1774780215015"
+                                                                                                                     },
+                                                                                                       "ownerName":  {
+                                                                                                                         "stringValue":  "Demo Owner"
+                                                                                                                     },
+                                                                                                       "tableCount":  {
+                                                                                                                          "integerValue":  "20"
+                                                                                                                      },
+                                                                                                       "id":  {
+                                                                                                                  "stringValue":  "dca251c2-c0fb-4b29-835e-0268d35ad3ae"
+                                                                                                              },
+                                                                                                       "cuisine":  {
+                                                                                                                       "stringValue":  "Multi-Cuisine"
+                                                                                                                   },
+                                                                                                       "status":  {
+                                                                                                                      "stringValue":  "active"
+                                                                                                                  },
+                                                                                                       "subscription":  {
+                                                                                                                            "mapValue":  {
+                                                                                                                                             "fields":  {
+                                                                                                                                                            "status":  "@{stringValue=active}",
+                                                                                                                                                            "plan":  "@{stringValue=yearly}",
+                                                                                                                                                            "amount":  "@{integerValue=3000}",
+                                                                                                                                                            "startDate":  "@{integerValue=1774780215017}",
+                                                                                                                                                            "paymentMethod":  "@{stringValue=UPI}",
+                                                                                                                                                            "expiryDate":  "@{integerValue=1806316215017}"
+                                                                                                                                                        }
+                                                                                                                                         }
+                                                                                                                        },
+                                                                                                       "name":  {
+                                                                                                                    "stringValue":  "RestroDyn Demo"
+                                                                                                                },
+                                                                                                       "lastLogin":  {
+                                                                                                                         "integerValue":  "1774780215015"
+                                                                                                                     },
+                                                                                                       "slug":  {
+                                                                                                                    "stringValue":  "restrodyn-demo"
+                                                                                                                },
+                                                                                                       "logo":  {
+                                                                                                                    "stringValue":  ""
+                                                                                                                },
+                                                                                                       "email":  {
+                                                                                                                     "stringValue":  "demo@restrodyn.app"
+                                                                                                                 },
+                                                                                                       "password":  {
+                                                                                                                        "stringValue":  "hpnskfj"
+                                                                                                                    }
+                                                                                                   }
+                                                                                    }
+                                                                   },
+                                                                   {
+                                                                       "mapValue":  {
+                                                                                        "fields":  {
+                                                                                                       "lastLogin":  {
+                                                                                                                         "integerValue":  "1776538287418"
+                                                                                                                     },
+                                                                                                       "slug":  {
+                                                                                                                    "stringValue":  "vanz-foods"
+                                                                                                                },
+                                                                                                       "logo":  {
+                                                                                                                    "stringValue":  ""
+                                                                                                                },
+                                                                                                       "email":  {
+                                                                                                                     "stringValue":  "vanzfoods@gmail.com"
+                                                                                                                 },
+                                                                                                       "password":  {
+                                                                                                                        "stringValue":  "hj361ku"
+                                                                                                                    },
+                                                                                                       "subscription":  {
+                                                                                                                            "mapValue":  {
+                                                                                                                                             "fields":  {
+                                                                                                                                                            "expiryDate":  "@{integerValue=1777475600985}",
+                                                                                                                                                            "paymentMethod":  "@{stringValue=QR Code Payment}",
+                                                                                                                                                            "amount":  "@{integerValue=300}",
+                                                                                                                                                            "startDate":  "@{integerValue=1774883600985}",
+                                                                                                                                                            "status":  "@{stringValue=active}",
+                                                                                                                                                            "plan":  "@{stringValue=monthly}"
+                                                                                                                                                        }
+                                                                                                                                         }
+                                                                                                                        },
+                                                                                                       "name":  {
+                                                                                                                    "stringValue":  "VANZ FOODS"
+                                                                                                                },
+                                                                                                       "id":  {
+                                                                                                                  "stringValue":  "91ad8220-16d0-441b-b4e5-672cf8852f97"
+                                                                                                              },
+                                                                                                       "cuisine":  {
+                                                                                                                       "stringValue":  "Indian"
+                                                                                                                   },
+                                                                                                       "status":  {
+                                                                                                                      "stringValue":  "active"
+                                                                                                                  },
+                                                                                                       "phone":  {
+                                                                                                                     "stringValue":  "7055560590"
+                                                                                                                 },
+                                                                                                       "address":  {
+                                                                                                                       "stringValue":  "Mumbai"
+                                                                                                                   },
+                                                                                                       "createdAt":  {
+                                                                                                                         "integerValue":  "1774780272750"
+                                                                                                                     },
+                                                                                                       "ownerName":  {
+                                                                                                                         "stringValue":  "Vishvani Dev"
+                                                                                                                     },
+                                                                                                       "tableCount":  {
+                                                                                                                          "integerValue":  "20"
+                                                                                                                      }
+                                                                                                   }
+                                                                                    }
+                                                                   }
+                                                               ]
+                                                }
+                             }
+               },
+    "createTime":  "2026-04-18T19:03:13.581945Z",
+    "updateTime":  "2026-04-18T19:04:26.927817Z"
+}

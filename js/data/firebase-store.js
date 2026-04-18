@@ -9,6 +9,8 @@ import {
 } from 'firebase/firestore';
 
 const useFirebase = isFirebaseConfigured() && db !== null;
+let platformSyncPromise = null;
+let restaurantSyncPromises = {};
 
 // ═══════════════════════════════════════
 //  Local Cache Helpers (localStorage)
@@ -182,14 +184,24 @@ export async function preloadFirestoreData(items) {
  */
 export async function syncPlatformData() {
   if (!useFirebase) return;
+  if (platformSyncPromise) return platformSyncPromise;
 
-  await preloadFirestoreData([
-    { collection: 'platform', docId: 'restaurants', cacheKey: 'restrodyn_platform_restaurants' },
-    { collection: 'platform', docId: 'config', cacheKey: 'restrodyn_platform_config' },
-    { collection: 'platform', docId: 'superAdmin', cacheKey: 'restrodyn_super_admin' },
-    { collection: 'platform', docId: 'initialized', cacheKey: 'restrodyn_platform_initialized' },
-    { collection: 'platform', docId: 'paymentRecords', cacheKey: 'restrodyn_payment_records' },
-  ]);
+  platformSyncPromise = (async () => {
+    try {
+      await preloadFirestoreData([
+        { collection: 'platform', docId: 'restaurants', cacheKey: 'restrodyn_platform_restaurants' },
+        { collection: 'platform', docId: 'config', cacheKey: 'restrodyn_platform_config' },
+        { collection: 'platform', docId: 'superAdmin', cacheKey: 'restrodyn_super_admin' },
+        { collection: 'platform', docId: 'initialized', cacheKey: 'restrodyn_platform_initialized' },
+        { collection: 'platform', docId: 'paymentRecords', cacheKey: 'restrodyn_payment_records' },
+      ]);
+    } finally {
+      // We don't clear the promise so future calls return the same completed state
+      // but we mark it as done internally if needed
+    }
+  })();
+
+  return platformSyncPromise;
 }
 
 /**
@@ -197,17 +209,22 @@ export async function syncPlatformData() {
  */
 export async function syncRestaurantData(restaurantId) {
   if (!useFirebase) return;
+  if (restaurantSyncPromises[restaurantId]) return restaurantSyncPromises[restaurantId];
 
-  const prefix = `restrodyn_${restaurantId}_`;
-  const keys = ['categories', 'items', 'orders', 'settings', 'initialized', 'paymentSettings'];
+  restaurantSyncPromises[restaurantId] = (async () => {
+    const prefix = `restrodyn_${restaurantId}_`;
+    const keys = ['categories', 'items', 'orders', 'settings', 'initialized', 'paymentSettings'];
 
-  await preloadFirestoreData(
-    keys.map(key => ({
-      collection: 'restaurantData',
-      docId: `${restaurantId}_${key}`,
-      cacheKey: `${prefix}${key}`,
-    }))
-  );
+    await preloadFirestoreData(
+      keys.map(key => ({
+        collection: 'restaurantData',
+        docId: `${restaurantId}_${key}`,
+        cacheKey: `${prefix}${key}`,
+      }))
+    );
+  })();
+
+  return restaurantSyncPromises[restaurantId];
 }
 
 /**
