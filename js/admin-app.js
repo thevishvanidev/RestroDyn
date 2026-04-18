@@ -6,7 +6,7 @@ import { initTheme, createThemeToggle } from './components/theme-toggle.js';
 import { showToast } from './components/toast.js';
 import { seedData } from './data/seed-data.js';
 import {
-  getCategories, getMenuItems, getSettings, saveSettings,
+  getCategories, addCategory, getMenuItems, getSettings, saveSettings,
   addMenuItem, updateMenuItem, deleteMenuItem,
   getOrders, getTodayOrders, updateOrderStatus, resetAll,
   setStoreNamespace, getPaymentSettings, savePaymentSettings
@@ -348,9 +348,13 @@ function openItemModal(itemId) {
         </div>
         <div class="input-group">
           <label>Category</label>
-          <select class="input" name="categoryId" required>
-            ${categories.map(c => `<option value="${c.id}" ${item?.categoryId === c.id ? 'selected' : ''}>${c.icon} ${c.name}</option>`).join('')}
-          </select>
+          <div style="display: flex; gap: var(--space-sm);">
+            <select class="input" style="flex:1" name="categoryId" id="modal-category-select" required>
+              ${categories.length === 0 ? '<option value="" disabled selected>No categories available</option>' : ''}
+              ${categories.map(c => `<option value="${c.id}" ${item?.categoryId === c.id ? 'selected' : ''}>${c.icon} ${c.name}</option>`).join('')}
+            </select>
+            <button type="button" class="btn btn-secondary" id="modal-add-cat-btn" title="Add New Category" style="padding: 0 var(--space-md)">+</button>
+          </div>
         </div>
       </div>
       <div class="item-form-row">
@@ -480,6 +484,18 @@ function openItemModal(itemId) {
     previewContainer.classList.remove('active');
     placeholder.style.display = '';
     fileInput.value = '';
+  });
+
+  // Add new category directly from modal
+  document.getElementById('modal-add-cat-btn').addEventListener('click', () => {
+    const name = prompt('Enter new category name:');
+    if (name && name.trim()) {
+      const newCat = { id: crypto.randomUUID(), name: name.trim(), icon: '🍽️', order: categories.length };
+      addCategory(newCat);
+      showToast({ title: 'Category added', type: 'success' });
+      // Re-render modal to reflect new category option
+      openItemModal(editingItemId);
+    }
   });
 
   document.getElementById('cancel-item-btn').addEventListener('click', closeItemModal);
