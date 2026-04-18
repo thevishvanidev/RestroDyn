@@ -7,15 +7,20 @@ import { initializePlatform } from './data/platform-store.js';
 import { setSession, isLoggedIn } from './data/auth.js';
 import { seedData } from './data/seed-data.js';
 import { seedRestaurantDefaults } from './data/seed-data.js';
+import { syncPlatformData } from './data/firebase-store.js';
 
 // Init
 initTheme();
-seedData();
 
-// Redirect if already logged in
-if (isLoggedIn()) {
-  window.location.href = '/admin.html';
-}
+// Async init: sync Firebase data then seed
+(async () => {
+  await syncPlatformData();
+  await seedData();
+  // Redirect if already logged in (after sync)
+  if (isLoggedIn()) {
+    window.location.href = '/admin.html';
+  }
+})();
 
 // Update trust count
 const trustCount = document.getElementById('trust-count');

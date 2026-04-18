@@ -1,17 +1,18 @@
 // ── RestroDyn Customer Menu App ──
-// Now restaurant-aware: loads data from ?restaurant=slug&table=X
+// Restaurant-aware: loads data from ?restaurant=slug&table=X
+// Features: Dynamic tax, UPI/Cash payment, Tip for UPI
 
 import { initTheme, createThemeToggle } from './components/theme-toggle.js';
 import { showToast } from './components/toast.js';
 import { seedData } from './data/seed-data.js';
-import { getCategories, getMenuItems, getSettings, addOrder, getOrder, setStoreNamespace } from './data/store.js';
-import { getRestaurantBySlug, getAllRestaurants } from './data/platform-store.js';
+import { getCategories, getMenuItems, getSettings, getPaymentSettings, addOrder, getOrder, setStoreNamespace } from './data/store.js';
+import { getRestaurantBySlug, getAllRestaurants, getRestaurantTaxRate } from './data/platform-store.js';
+import { syncRestaurantData, syncPlatformData } from './data/firebase-store.js';
 import { broadcast, EVENTS } from './data/broadcast.js';
 import { formatCurrency, getTagInfo, getStatusInfo, debounce, fuzzyMatch, elapsedMinutes, formatTime } from './utils/helpers.js';
 
 // ── Init ──
 initTheme();
-seedData();
 
 // Determine restaurant from URL
 const urlParams = new URLSearchParams(window.location.search);
@@ -19,25 +20,64 @@ const restaurantSlug = urlParams.get('restaurant');
 const tableNumber = parseInt(urlParams.get('table')) || 1;
 
 let currentRestaurant = null;
+let taxPercentage = 5; // Default, will be loaded from config
 
-if (restaurantSlug) {
-  currentRestaurant = getRestaurantBySlug(restaurantSlug);
-}
+// Async init to load Firebase data
+async function initApp() {
+  await seedData();
 
-// Fallback: if no slug, try first restaurant (demo)
-if (!currentRestaurant) {
-  const all = getAllRestaurants();
-  if (all.length > 0) {
-    currentRestaurant = all[0];
+  // Sync platform data for tax rates
+  await syncPlatformData();
+
+  if (restaurantSlug) {
+    currentRestaurant = getRestaurantBySlug(restaurantSlug);
   }
-}
 
-// Set namespace for data
-if (currentRestaurant) {
+  // If no restaurant found, show error (don't fallback to demo)
+  if (!currentRestaurant) {
+    showRestaurantNotFound();
+    return;
+  }
+
+  // Sync restaurant data from Firebase
+  await syncRestaurantData(currentRestaurant.id);
+
+  // Set namespace for data
   setStoreNamespace(currentRestaurant.id);
+
+  // Load restaurant-specific tax rate
+  taxPercentage = getRestaurantTaxRate(currentRestaurant.id);
+
+  const settings = getSettings();
+
+  // Set header info
+  restaurantName.textContent = currentRestaurant?.name || settings.restaurantName;
+  tableBadge.textContent = `Table ${tableNumber}`;
+
+  // Store settings for use in functions
+  window._menuSettings = settings;
+
+  // Initial Render
+  renderCategories();
+  renderMenu();
 }
 
-const settings = getSettings();
+function showRestaurantNotFound() {
+  const menuContent = document.getElementById('menu-content');
+  menuContent.innerHTML = `
+    <div class="no-results" style="margin-top:4rem">
+      <div class="no-results-icon">🏪</div>
+      <h3>Restaurant Not Found</h3>
+      <p>This menu link may be invalid or the restaurant hasn't been set up yet on this device.</p>
+      <p style="margin-top:1rem;font-size:0.85rem;color:var(--text-tertiary)">
+        If you're the restaurant owner, please ensure your Firebase is configured and data is synced.
+      </p>
+      <a href="/" class="btn btn-primary" style="margin-top:1.5rem">Go to Home</a>
+    </div>
+  `;
+  // Hide the cart bar
+  document.getElementById('cart-bar').style.display = 'none';
+}
 
 // State
 let cart = [];
@@ -45,6 +85,8 @@ let activeCategory = 'all';
 let activeFilter = 'all';
 let searchQuery = '';
 let currentOrderId = null;
+let selectedPaymentMethod = 'cash'; // 'cash' or 'upi'
+let tipAmount = 0;
 
 // DOM refs
 const restaurantName = document.getElementById('restaurant-name');
@@ -66,13 +108,13 @@ const trackerOverlay = document.getElementById('order-tracker-overlay');
 const trackerOrderNumber = document.getElementById('tracker-order-number');
 const trackerTimeline = document.getElementById('tracker-timeline');
 
-// Set header info
-restaurantName.textContent = currentRestaurant?.name || settings.restaurantName;
-tableBadge.textContent = `Table ${tableNumber}`;
-
 // Theme toggle
 const themeSlot = document.getElementById('theme-toggle-slot');
 if (themeSlot) themeSlot.appendChild(createThemeToggle());
+
+function getAppSettings() {
+  return window._menuSettings || getSettings();
+}
 
 // ── Render Categories ──
 function renderCategories() {
@@ -100,6 +142,7 @@ function renderCategories() {
 function renderMenu() {
   const categories = getCategories();
   const allItems = getMenuItems();
+  const settings = getAppSettings();
   const currency = settings.currency;
 
   let filteredItems = allItems;
@@ -261,6 +304,7 @@ function getCartTotal() {
 function updateCartUI() {
   const total = getCartTotal();
   const count = cart.reduce((s, i) => s + i.qty, 0);
+  const settings = getAppSettings();
   const currency = settings.currency;
 
   if (count > 0) {
@@ -273,10 +317,14 @@ function updateCartUI() {
 }
 
 function renderCartPanel() {
+  const settings = getAppSettings();
   const currency = settings.currency;
   const subtotal = getCartTotal();
-  const tax = Math.round(subtotal * 0.05);
-  const total = subtotal + tax;
+  const tax = Math.round(subtotal * (taxPercentage / 100));
+  const total = subtotal + tax + tipAmount;
+
+  // Get payment settings for this restaurant
+  const paymentSettings = getPaymentSettings();
 
   cartItems.innerHTML = cart.map(item => `
     <div class="cart-item">
@@ -295,7 +343,78 @@ function renderCartPanel() {
 
   cartSubtotal.textContent = formatCurrency(subtotal, currency);
   cartTax.textContent = formatCurrency(tax, currency);
+  
+  // Update tax label to show percentage
+  const taxLabel = document.getElementById('cart-tax-label');
+  if (taxLabel) taxLabel.textContent = `Taxes (${taxPercentage}%)`;
+
   cartTotalFinal.textContent = formatCurrency(total, currency);
+
+  // ── Payment Method Selection ──
+  const paymentSection = document.getElementById('payment-method-section');
+  if (paymentSection) {
+    paymentSection.innerHTML = `
+      <div class="payment-method-title">💳 Payment Method</div>
+      <div class="payment-method-options">
+        <button class="payment-method-btn ${selectedPaymentMethod === 'cash' ? 'active' : ''}" data-method="cash">
+          <span class="payment-method-icon">💵</span>
+          <span>Pay at Counter</span>
+        </button>
+        <button class="payment-method-btn ${selectedPaymentMethod === 'upi' ? 'active' : ''}" data-method="upi">
+          <span class="payment-method-icon">📱</span>
+          <span>Pay via UPI</span>
+        </button>
+      </div>
+      ${selectedPaymentMethod === 'upi' ? renderUpiSection(paymentSettings, currency) : ''}
+    `;
+
+    // Attach payment method handlers
+    paymentSection.querySelectorAll('.payment-method-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedPaymentMethod = btn.dataset.method;
+        if (selectedPaymentMethod !== 'upi') {
+          tipAmount = 0;
+        }
+        renderCartPanel();
+      });
+    });
+
+    // Attach tip handlers
+    if (selectedPaymentMethod === 'upi') {
+      paymentSection.querySelectorAll('.tip-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = parseInt(btn.dataset.tip);
+          tipAmount = tipAmount === val ? 0 : val; // Toggle
+          renderCartPanel();
+        });
+      });
+
+      const customTipInput = paymentSection.querySelector('#custom-tip-input');
+      if (customTipInput) {
+        customTipInput.addEventListener('input', () => {
+          tipAmount = parseInt(customTipInput.value) || 0;
+          // Update total display without re-rendering
+          const newTotal = subtotal + tax + tipAmount;
+          cartTotalFinal.textContent = formatCurrency(newTotal, currency);
+          
+          // Update tip display
+          const tipDisplay = document.getElementById('tip-display');
+          if (tipDisplay) tipDisplay.textContent = formatCurrency(tipAmount, currency);
+        });
+      }
+    }
+  }
+
+  // Update tip display in summary
+  const tipRow = document.getElementById('cart-tip-row');
+  if (tipRow) {
+    if (selectedPaymentMethod === 'upi' && tipAmount > 0) {
+      tipRow.style.display = 'flex';
+      document.getElementById('tip-display').textContent = formatCurrency(tipAmount, currency);
+    } else {
+      tipRow.style.display = 'none';
+    }
+  }
 
   cartItems.querySelectorAll('.qty-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -308,10 +427,57 @@ function renderCartPanel() {
   });
 }
 
+function renderUpiSection(paymentSettings, currency) {
+  const hasQr = paymentSettings.upiQrImage;
+  const hasUpiId = paymentSettings.upiId;
+
+  return `
+    <div class="upi-payment-section">
+      ${hasQr ? `
+        <div class="upi-qr-display">
+          <p class="upi-label">Scan QR to Pay</p>
+          <img src="${paymentSettings.upiQrImage}" alt="Restaurant UPI QR" class="upi-qr-img" />
+        </div>
+      ` : ''}
+      ${hasUpiId ? `
+        <div class="upi-id-display">
+          <p class="upi-label">UPI ID</p>
+          <div class="upi-id-row">
+            <span class="upi-id-value">${paymentSettings.upiId}</span>
+            <button class="btn btn-sm btn-secondary copy-upi-btn" title="Copy">📋</button>
+          </div>
+        </div>
+      ` : ''}
+      ${!hasQr && !hasUpiId ? `
+        <div class="upi-not-setup">
+          <span>📱</span>
+          <p>UPI payment is not set up for this restaurant yet. Please pay at the counter.</p>
+        </div>
+      ` : ''}
+      
+      <!-- Tip Section -->
+      <div class="tip-section">
+        <div class="tip-title">💝 Add a Tip</div>
+        <div class="tip-subtitle">Show your appreciation for great service</div>
+        <div class="tip-options">
+          <button class="tip-btn ${tipAmount === 10 ? 'active' : ''}" data-tip="10">₹10</button>
+          <button class="tip-btn ${tipAmount === 20 ? 'active' : ''}" data-tip="20">₹20</button>
+          <button class="tip-btn ${tipAmount === 50 ? 'active' : ''}" data-tip="50">₹50</button>
+          <button class="tip-btn ${tipAmount === 100 ? 'active' : ''}" data-tip="100">₹100</button>
+        </div>
+        <div class="tip-custom">
+          <input type="number" class="input tip-custom-input" id="custom-tip-input" placeholder="Custom amount" min="0" value="${tipAmount > 0 && ![10,20,50,100].includes(tipAmount) ? tipAmount : ''}" />
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 // ── Dish Modal ──
 function openDishModal(itemId) {
   const item = getMenuItems().find(i => i.id === itemId);
   if (!item) return;
+  const settings = getAppSettings();
   const currency = settings.currency;
 
   if (item.image) {
@@ -401,7 +567,7 @@ document.getElementById('place-order-btn').addEventListener('click', () => {
 
   const specialInstructions = document.getElementById('special-instructions')?.value || '';
   const subtotal = getCartTotal();
-  const tax = Math.round(subtotal * 0.05);
+  const tax = Math.round(subtotal * (taxPercentage / 100));
 
   const order = addOrder({
     tableNumber,
@@ -409,8 +575,11 @@ document.getElementById('place-order-btn').addEventListener('click', () => {
     items: cart.map(c => ({ ...c })),
     subtotal,
     tax,
-    total: subtotal + tax,
+    taxPercentage,
+    total: subtotal + tax + tipAmount,
     specialInstructions,
+    paymentMethod: selectedPaymentMethod,
+    tipAmount: selectedPaymentMethod === 'upi' ? tipAmount : 0,
   });
 
   // Broadcast to kitchen
@@ -418,6 +587,8 @@ document.getElementById('place-order-btn').addEventListener('click', () => {
 
   currentOrderId = order.id;
   cart = [];
+  tipAmount = 0;
+  selectedPaymentMethod = 'cash';
   updateCartUI();
   cartOverlay.classList.remove('active');
 
@@ -431,10 +602,12 @@ function showOrderTracker(order) {
   trackerOrderNumber.textContent = order.orderNumber;
   updateTrackerTimeline(order.status);
 
+  const settings = getAppSettings();
   const currency = settings.currency;
   document.getElementById('tracker-details').innerHTML = `
     <p>Table ${order.tableNumber} • ${order.items.length} item(s) • <strong>${formatCurrency(order.total, currency)}</strong></p>
-    <p style="margin-top:4px;font-size:0.75rem">Placed at ${formatTime(order.createdAt)}</p>
+    <p style="margin-top:4px;font-size:0.75rem">Placed at ${formatTime(order.createdAt)} • ${order.paymentMethod === 'upi' ? '📱 UPI Payment' : '💵 Pay at Counter'}</p>
+    ${order.tipAmount > 0 ? `<p style="margin-top:2px;font-size:0.75rem;color:var(--accent)">💝 Tip: ${formatCurrency(order.tipAmount, currency)}</p>` : ''}
   `;
 }
 
@@ -507,6 +680,17 @@ document.getElementById('call-waiter-btn').addEventListener('click', () => {
   setTimeout(() => btn.classList.remove('calling'), 3000);
 });
 
-// ── Initial Render ──
-renderCategories();
-renderMenu();
+// ── Copy UPI handler (delegated) ──
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.copy-upi-btn')) {
+    const paymentSettings = getPaymentSettings();
+    if (paymentSettings.upiId) {
+      navigator.clipboard.writeText(paymentSettings.upiId).then(() => {
+        showToast({ title: 'UPI ID copied!', type: 'success' });
+      });
+    }
+  }
+});
+
+// ── Start App ──
+initApp();

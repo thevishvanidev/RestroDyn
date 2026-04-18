@@ -62,6 +62,10 @@
           <span class="sidebar-icon">💰</span>
           <span>Payment Methods</span>
         </button>
+        <button class="sidebar-link" data-section="sa-taxes" id="sa-nav-taxes">
+          <span class="sidebar-icon">🧾</span>
+          <span>Taxes</span>
+        </button>
         <button class="sidebar-link" data-section="sa-settings" id="sa-nav-settings">
           <span class="sidebar-icon">⚙️</span>
           <span>Settings</span>
@@ -249,6 +253,40 @@
           <div id="pm-all-payments-list">
             <!-- Injected by JS -->
           </div>
+        </div>
+      </section>
+
+      <!-- Taxes Section -->
+      <section class="sa-section" id="section-sa-taxes">
+        <div class="section-top">
+          <div>
+            <h1>Tax Configuration</h1>
+            <p class="section-desc">Set tax percentages for each restaurant. This tax is applied to food orders.</p>
+          </div>
+        </div>
+
+        <!-- Default Tax -->
+        <div class="tax-default-card glass">
+          <div class="tax-default-header">
+            <span class="tax-default-icon">🌐</span>
+            <div>
+              <h3>Default Tax Rate</h3>
+              <p>Applied to new restaurants when they register</p>
+            </div>
+          </div>
+          <div class="tax-default-input-row">
+            <div class="input-group">
+              <label>Tax Percentage (%)</label>
+              <input type="number" class="input" id="sa-default-tax" min="0" max="50" step="0.5" />
+            </div>
+            <button class="btn btn-primary" id="sa-save-default-tax">💾 Save</button>
+          </div>
+        </div>
+
+        <!-- Per-Restaurant Tax Grid -->
+        <h3 class="tax-section-title">🏨 Restaurant Tax Rates</h3>
+        <div id="sa-tax-grid">
+          <!-- Injected by JS -->
         </div>
       </section>
 

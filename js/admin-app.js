@@ -1,5 +1,6 @@
 // ── RestroDyn Admin Dashboard App ──
 // Now auth-gated and namespaced per restaurant
+// Firebase-synced for cross-device persistence
 
 import { initTheme, createThemeToggle } from './components/theme-toggle.js';
 import { showToast } from './components/toast.js';
@@ -8,16 +9,16 @@ import {
   getCategories, getMenuItems, getSettings, saveSettings,
   addMenuItem, updateMenuItem, deleteMenuItem,
   getOrders, getTodayOrders, updateOrderStatus, resetAll,
-  setStoreNamespace
+  setStoreNamespace, getPaymentSettings, savePaymentSettings
 } from './data/store.js';
 import { getRestaurant, getPlatformConfig, submitPayment, getPaymentsByRestaurant } from './data/platform-store.js';
 import { getSession, requireAuth, getRestaurantId, getSubscriptionStatus, logout } from './data/auth.js';
+import { syncRestaurantData, syncPlatformData } from './data/firebase-store.js';
 import { broadcast, EVENTS } from './data/broadcast.js';
 import { formatCurrency, formatTime, getStatusInfo, timeAgo, formatDate } from './utils/helpers.js';
 
 // Init
 initTheme();
-seedData();
 
 // ── Auth gate ──
 if (!requireAuth('/register.html')) {
@@ -28,6 +29,14 @@ if (!requireAuth('/register.html')) {
 const session = getSession();
 const restaurantId = getRestaurantId();
 setStoreNamespace(restaurantId);
+
+// Async init: sync Firebase data then seed
+(async () => {
+  await syncPlatformData();
+  await syncRestaurantData(restaurantId);
+  await seedData();
+  renderDashboard();
+})();
 
 // Load restaurant info
 const restaurant = getRestaurant(restaurantId);
@@ -69,7 +78,7 @@ function switchSection(section) {
   document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
   document.getElementById(`section-${section}`)?.classList.add('active');
   
-  const titles = { dashboard: 'Dashboard', menu: 'Menu', orders: 'Orders', qr: 'QR Codes', billpay: 'Bill Pay', settings: 'Settings' };
+  const titles = { dashboard: 'Dashboard', menu: 'Menu', orders: 'Orders', qr: 'QR Codes', billpay: 'Bill Pay', payment: 'Payment Settings', settings: 'Settings' };
   document.getElementById('mobile-title').textContent = titles[section] || section;
 
   // Close mobile sidebar
@@ -81,6 +90,7 @@ function switchSection(section) {
   else if (section === 'menu') renderMenuSection();
   else if (section === 'orders') renderOrders();
   else if (section === 'billpay') renderBillPay();
+  else if (section === 'payment') renderPaymentSettingsSection();
   else if (section === 'settings') loadSettings();
 }
 
@@ -1081,5 +1091,126 @@ broadcast.on(EVENTS.ORDER_STATUS_CHANGE, () => {
   if (currentSection === 'orders') renderOrders();
 });
 
-// Initial render
-renderDashboard();
+// ══════════════════════════════════════════
+//  PAYMENT SETTINGS SECTION
+// ══════════════════════════════════════════
+
+let paymentQrImageData = '';
+
+function renderPaymentSettingsSection() {
+  const ps = getPaymentSettings();
+  paymentQrImageData = ps.upiQrImage || '';
+
+  const container = document.getElementById('payment-settings-body');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="ps-card glass">
+      <div class="ps-card-header">
+        <span class="ps-card-icon">📱</span>
+        <h3>UPI Payment QR Code</h3>
+      </div>
+      <p class="ps-card-desc">Upload your restaurant's UPI payment QR code. Customers will see this when they choose to pay via UPI.</p>
+      <div class="ps-upload-area" id="ps-upload-area">
+        <div class="ps-upload-placeholder" id="ps-upload-placeholder" ${paymentQrImageData ? 'style="display:none"' : ''}>
+          <div class="ps-upload-icon">📸</div>
+          <p>Drop your payment QR code here</p>
+          <span>JPG, PNG, WebP • Max 5MB</span>
+          <button type="button" class="btn btn-sm btn-secondary" id="ps-browse-btn">Browse Files</button>
+        </div>
+        <div class="ps-upload-preview ${paymentQrImageData ? 'active' : ''}" id="ps-upload-preview">
+          <img src="${paymentQrImageData}" alt="Payment QR" id="ps-preview-img" />
+          <button type="button" class="ps-upload-remove" id="ps-remove-btn">✕</button>
+        </div>
+        <input type="file" id="ps-file-input" accept="image/jpeg,image/png,image/webp" hidden />
+      </div>
+      <button class="btn btn-primary" id="ps-save-qr">💾 Save QR Code</button>
+    </div>
+
+    <div class="ps-card glass">
+      <div class="ps-card-header">
+        <span class="ps-card-icon">🔗</span>
+        <h3>UPI ID</h3>
+      </div>
+      <p class="ps-card-desc">Enter your restaurant's UPI ID for customers to pay directly.</p>
+      <div class="input-group">
+        <label>UPI ID</label>
+        <input type="text" class="input" id="ps-upi-id" value="${ps.upiId || ''}" placeholder="e.g. myrestaurant@upi" />
+      </div>
+      <button class="btn btn-primary" id="ps-save-upi">💾 Save UPI ID</button>
+    </div>
+  `;
+
+  // Wire up upload handlers
+  initPaymentQrUpload();
+
+  // Save QR
+  document.getElementById('ps-save-qr')?.addEventListener('click', () => {
+    const ps = getPaymentSettings();
+    ps.upiQrImage = paymentQrImageData;
+    savePaymentSettings(ps);
+    showToast({ title: 'Payment QR saved!', type: 'success' });
+  });
+
+  // Save UPI ID
+  document.getElementById('ps-save-upi')?.addEventListener('click', () => {
+    const ps = getPaymentSettings();
+    ps.upiId = document.getElementById('ps-upi-id').value.trim();
+    savePaymentSettings(ps);
+    showToast({ title: 'UPI ID saved!', type: 'success' });
+  });
+}
+
+function initPaymentQrUpload() {
+  const uploadArea = document.getElementById('ps-upload-area');
+  const placeholder = document.getElementById('ps-upload-placeholder');
+  const preview = document.getElementById('ps-upload-preview');
+  const previewImg = document.getElementById('ps-preview-img');
+  const fileInput = document.getElementById('ps-file-input');
+  const browseBtn = document.getElementById('ps-browse-btn');
+  const removeBtn = document.getElementById('ps-remove-btn');
+
+  function handleFile(file) {
+    if (!file) return;
+    if (!file.type.match(/^image\/(jpeg|png|webp)$/)) {
+      showToast({ title: 'Invalid file type', type: 'error' });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast({ title: 'File too large', message: 'Max 5MB', type: 'error' });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      paymentQrImageData = e.target.result;
+      previewImg.src = paymentQrImageData;
+      placeholder.style.display = 'none';
+      preview.classList.add('active');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  browseBtn?.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); fileInput.click(); });
+  uploadArea?.addEventListener('click', (e) => {
+    if (e.target === uploadArea || e.target.closest('#ps-upload-placeholder')) {
+      if (!e.target.closest('#ps-browse-btn')) fileInput.click();
+    }
+  });
+  fileInput?.addEventListener('change', () => handleFile(fileInput.files[0]));
+  uploadArea?.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+  uploadArea?.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+  uploadArea?.addEventListener('drop', (e) => {
+    e.preventDefault(); uploadArea.classList.remove('dragover');
+    handleFile(e.dataTransfer.files[0]);
+  });
+  removeBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    paymentQrImageData = '';
+    previewImg.src = '';
+    preview.classList.remove('active');
+    placeholder.style.display = '';
+    fileInput.value = '';
+  });
+}
+
+// Initial render is handled by async init above

@@ -9,16 +9,26 @@ import {
   updateRestaurant, suspendRestaurant, activateRestaurant, deleteRestaurant,
   updateRestaurantSubscription, initializePlatform,
   getPaymentRecords, approvePayment, rejectPayment,
+  getRestaurantTaxRate, setRestaurantTaxRate, setDefaultTaxRate,
 } from './data/platform-store.js';
 import {
   isSuperAdminLoggedIn, setSuperAdminSession,
   clearSuperAdminSession,
 } from './data/auth.js';
+import { syncPlatformData } from './data/firebase-store.js';
 import { formatCurrency, formatDate, timeAgo } from './utils/helpers.js';
 
 // Init
 initTheme();
-seedData();
+
+// Async init: sync Firebase data then seed
+(async () => {
+  await syncPlatformData();
+  await seedData();
+  if (isSuperAdminLoggedIn()) {
+    renderDashboard();
+  }
+})();
 
 let currentSection = 'sa-dashboard';
 let searchQuery = '';
@@ -76,6 +86,7 @@ function switchSection(section) {
     'sa-restaurants': 'Restaurants',
     'sa-subscriptions': 'Subscriptions',
     'sa-payment-methods': 'Payment Methods',
+    'sa-taxes': 'Taxes',
     'sa-settings': 'Settings',
   };
   document.getElementById('sa-mobile-title').textContent = titles[section] || '';
@@ -88,6 +99,7 @@ function switchSection(section) {
   else if (section === 'sa-restaurants') renderRestaurants();
   else if (section === 'sa-subscriptions') renderSubscriptions();
   else if (section === 'sa-payment-methods') renderPaymentMethods();
+  else if (section === 'sa-taxes') renderTaxes();
   else if (section === 'sa-settings') loadSettings();
 }
 
@@ -703,7 +715,71 @@ document.getElementById('pm-save-bank')?.addEventListener('click', () => {
   showToast({ title: 'Bank details saved!', type: 'success' });
 });
 
-// Initial render
-if (isSuperAdminLoggedIn()) {
-  renderDashboard();
+// Initial render handled by async init
+
+// ═══════════════════════════════════════
+//  TAX CONFIGURATION
+// ═══════════════════════════════════════
+
+function renderTaxes() {
+  const config = getPlatformConfig();
+  const restaurants = getAllRestaurants();
+
+  // Default tax
+  document.getElementById('sa-default-tax').value = config.defaultTaxPercentage ?? 5;
+
+  // Per-restaurant tax grid
+  const grid = document.getElementById('sa-tax-grid');
+  if (!restaurants.length) {
+    grid.innerHTML = '<p style="color:var(--text-tertiary);font-size:var(--text-sm);padding:var(--space-md) 0">No restaurants registered yet</p>';
+    return;
+  }
+
+  grid.innerHTML = restaurants.map(r => {
+    const taxRate = getRestaurantTaxRate(r.id);
+    return `
+      <div class="tax-restaurant-card glass">
+        <div class="tax-rest-info">
+          <div class="tax-rest-avatar">🏪</div>
+          <div class="tax-rest-details">
+            <div class="tax-rest-name">${r.name}</div>
+            <div class="tax-rest-email">${r.email}</div>
+          </div>
+        </div>
+        <div class="tax-rest-control">
+          <div class="tax-input-wrapper">
+            <input type="number" class="input tax-rate-input" data-id="${r.id}" value="${taxRate}" min="0" max="50" step="0.5" />
+            <span class="tax-percent-sign">%</span>
+          </div>
+          <button class="btn btn-sm btn-primary tax-save-btn" data-id="${r.id}">Save</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Save handlers
+  grid.querySelectorAll('.tax-save-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const input = grid.querySelector(`.tax-rate-input[data-id="${id}"]`);
+      const rate = parseFloat(input.value);
+      if (isNaN(rate) || rate < 0 || rate > 50) {
+        showToast({ title: 'Invalid tax rate', message: 'Must be between 0 and 50', type: 'error' });
+        return;
+      }
+      setRestaurantTaxRate(id, rate);
+      showToast({ title: 'Tax rate updated', type: 'success' });
+    });
+  });
 }
+
+// Save default tax
+document.getElementById('sa-save-default-tax')?.addEventListener('click', () => {
+  const val = parseFloat(document.getElementById('sa-default-tax').value);
+  if (isNaN(val) || val < 0 || val > 50) {
+    showToast({ title: 'Invalid tax rate', message: 'Must be between 0 and 50', type: 'error' });
+    return;
+  }
+  setDefaultTaxRate(val);
+  showToast({ title: 'Default tax rate saved', type: 'success' });
+});

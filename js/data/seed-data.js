@@ -1,9 +1,11 @@
 // ── RestroDyn Seed Data ──
 // Pre-populates the store with demo menu data for a specific restaurant
 // Now namespace-aware: data is seeded under the active restaurant context
+// Firebase-aware: syncs platform data from Firestore on startup
 
 import { saveCategories, saveMenuItems, getSettings, saveSettings, markInitialized, isInitialized, setStoreNamespace } from './store.js';
-import { initializePlatform, getAllRestaurants } from './platform-store.js';
+import { initializePlatform, getAllRestaurants, syncPlatformData } from './platform-store.js';
+import { syncRestaurantData } from './firebase-store.js';
 
 const CATEGORIES = [
   { id: 'cat-starters', name: 'Starters', icon: '🥗', order: 0 },
@@ -207,7 +209,10 @@ const MENU_ITEMS = [
   },
 ];
 
-export function seedData() {
+export async function seedData() {
+  // Sync platform data from Firebase first (if configured)
+  await syncPlatformData();
+
   // Always initialize platform first
   initializePlatform();
 
@@ -215,6 +220,9 @@ export function seedData() {
   const restaurants = getAllRestaurants();
   const demoRestaurant = restaurants.find(r => r.email === 'demo@restrodyn.app');
   if (demoRestaurant) {
+    // Sync demo restaurant's data from Firebase
+    await syncRestaurantData(demoRestaurant.id);
+
     // Seed menu data for the demo restaurant
     setStoreNamespace(demoRestaurant.id);
     if (!isInitialized()) {

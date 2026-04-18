@@ -7,12 +7,12 @@ import { seedData } from './data/seed-data.js';
 import { getOrders, updateOrderStatus, getTodayOrders, setStoreNamespace } from './data/store.js';
 import { getSession, requireAuth, getRestaurantId } from './data/auth.js';
 import { getRestaurant } from './data/platform-store.js';
+import { syncRestaurantData, syncPlatformData } from './data/firebase-store.js';
 import { broadcast, EVENTS } from './data/broadcast.js';
 import { formatTime, elapsedMinutes } from './utils/helpers.js';
 
 // Init
 initTheme();
-seedData();
 
 // Auth gate
 if (!requireAuth('/register.html')) {
@@ -22,6 +22,14 @@ if (!requireAuth('/register.html')) {
 const session = getSession();
 const restaurantId = getRestaurantId();
 setStoreNamespace(restaurantId);
+
+// Async init
+(async () => {
+  await syncPlatformData();
+  await syncRestaurantData(restaurantId);
+  await seedData();
+  loadOrders();
+})();
 
 const restaurant = getRestaurant(restaurantId);
 
@@ -239,5 +247,5 @@ setInterval(() => {
   });
 }, 30000);
 
-// Initial load
-loadOrders();
+// Initial load handled by async init above
+

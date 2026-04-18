@@ -1221,3 +1221,139 @@
     z-index: var(--z-sticky);
   }
 }
+
+/* ══════════════════════════════════════════
+   PAYMENT SETTINGS (Restaurant UPI/QR)
+   ══════════════════════════════════════════ */
+
+.ps-card {
+  padding: var(--space-2xl);
+  margin-bottom: var(--space-xl);
+  max-width: 560px;
+}
+
+.ps-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm);
+}
+
+.ps-card-icon {
+  font-size: 1.5rem;
+}
+
+.ps-card-header h3 {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.ps-card-desc {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-lg);
+  line-height: 1.5;
+}
+
+.ps-upload-area {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  background: var(--bg-tertiary);
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-lg);
+  position: relative;
+}
+
+.ps-upload-area:hover {
+  border-color: var(--primary-500);
+  background: rgba(255, 193, 7, 0.04);
+}
+
+.ps-upload-area.dragover {
+  border-color: var(--primary-500);
+  background: rgba(255, 193, 7, 0.08);
+  border-style: solid;
+  box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.15);
+}
+
+.ps-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-sm);
+}
+
+.ps-upload-icon {
+  font-size: 2.5rem;
+  transition: transform var(--transition-base);
+}
+
+.ps-upload-area.dragover .ps-upload-icon {
+  transform: scale(1.2);
+}
+
+.ps-upload-placeholder p {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.ps-upload-placeholder span {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.ps-upload-preview {
+  display: none;
+  position: relative;
+  max-width: 280px;
+}
+
+.ps-upload-preview.active {
+  display: block;
+}
+
+.ps-upload-preview img {
+  width: 100%;
+  height: auto;
+  max-height: 280px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-color);
+  background: white;
+  padding: var(--space-sm);
+}
+
+.ps-upload-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 82, 82, 0.9);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.ps-upload-remove:hover {
+  background: var(--error);
+  transform: scale(1.1);
+}

@@ -1,6 +1,8 @@
 // ── RestroDyn Data Store ──
 // Wraps localStorage with typed operations for menu, orders, and settings
-// Now supports restaurant namespacing for multi-tenant operation
+// Now supports restaurant namespacing and Firebase write-through sync
+
+import { restaurantWrite, syncRestaurantData } from './firebase-store.js';
 
 let _restaurantId = null;
 
@@ -34,13 +36,21 @@ function set(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
+// Firebase-aware write: writes to both localStorage and Firestore
+function setSync(dataKey, key, value) {
+  set(key, value);
+  if (_restaurantId) {
+    restaurantWrite(_restaurantId, dataKey, key, value);
+  }
+}
+
 // ── Categories ──
 export function getCategories() {
   return get(getKey('categories')) || [];
 }
 
 export function saveCategories(categories) {
-  set(getKey('categories'), categories);
+  setSync('categories', getKey('categories'), categories);
 }
 
 export function addCategory(category) {
@@ -71,7 +81,7 @@ export function getMenuItems() {
 }
 
 export function saveMenuItems(items) {
-  set(getKey('items'), items);
+  setSync('items', getKey('items'), items);
 }
 
 export function getItemsByCategory(categoryId) {
@@ -107,7 +117,7 @@ export function getOrders() {
 }
 
 export function saveOrders(orders) {
-  set(getKey('orders'), orders);
+  setSync('orders', getKey('orders'), orders);
 }
 
 export function addOrder(order) {
@@ -173,7 +183,19 @@ export function getSettings() {
 }
 
 export function saveSettings(settings) {
-  set(getKey('settings'), settings);
+  setSync('settings', getKey('settings'), settings);
+}
+
+// ── Payment Settings (Restaurant-level UPI/QR) ──
+export function getPaymentSettings() {
+  return get(getKey('paymentSettings')) || {
+    upiId: '',
+    upiQrImage: '',
+  };
+}
+
+export function savePaymentSettings(paymentSettings) {
+  setSync('paymentSettings', getKey('paymentSettings'), paymentSettings);
 }
 
 // ── Initialization ──
@@ -182,7 +204,7 @@ export function isInitialized() {
 }
 
 export function markInitialized() {
-  set(getKey('initialized'), true);
+  setSync('initialized', getKey('initialized'), true);
 }
 
 export function resetAll() {
@@ -196,3 +218,6 @@ export function resetAll() {
   }
   keysToRemove.forEach(key => localStorage.removeItem(key));
 }
+
+// ── Firebase Sync Helper ──
+export { syncRestaurantData } from './firebase-store.js';

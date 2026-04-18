@@ -84,14 +84,24 @@
       <div class="cart-special">
         <textarea class="input" id="special-instructions" placeholder="Any special instructions for the kitchen?" rows="2"></textarea>
       </div>
+
+      <!-- Payment Method Selection -->
+      <div class="payment-method-section" id="payment-method-section">
+        <!-- Injected by JS -->
+      </div>
+
       <div class="cart-summary">
         <div class="cart-summary-row">
           <span>Subtotal</span>
           <span id="cart-subtotal">₹0</span>
         </div>
         <div class="cart-summary-row">
-          <span>Taxes & Charges</span>
+          <span id="cart-tax-label">Taxes (5%)</span>
           <span id="cart-tax">₹0</span>
+        </div>
+        <div class="cart-summary-row" id="cart-tip-row" style="display:none">
+          <span>💝 Tip</span>
+          <span id="tip-display">₹0</span>
         </div>
         <div class="cart-summary-row cart-total-row">
           <span>Total</span>

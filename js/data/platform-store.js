@@ -1,5 +1,8 @@
 // ── RestroDyn Platform Store ──
 // Platform-level CRUD for restaurants, subscriptions, config, super admin
+// Now with Firebase write-through sync
+
+import { platformWrite, syncPlatformData, useFirebase } from './firebase-store.js';
 
 const PLATFORM_KEYS = {
   RESTAURANTS: 'restrodyn_platform_restaurants',
@@ -20,6 +23,11 @@ function pGet(key) {
 
 function pSet(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+}
+
+// Firebase-aware write: writes to both localStorage and Firestore
+function pSetSync(docId, key, value) {
+  platformWrite(docId, key, value);
 }
 
 // ══════════════════════════════════════════
@@ -46,6 +54,9 @@ const DEFAULT_CONFIG = {
       bankName: '',
     },
   },
+  // Per-restaurant taxes: { restaurantId: taxPercentage }
+  restaurantTaxes: {},
+  defaultTaxPercentage: 5,
 };
 
 export function getPlatformConfig() {
@@ -53,7 +64,7 @@ export function getPlatformConfig() {
 }
 
 export function savePlatformConfig(config) {
-  pSet(PLATFORM_KEYS.CONFIG, config);
+  pSetSync('config', PLATFORM_KEYS.CONFIG, config);
 }
 
 export function updatePlatformConfig(updates) {
@@ -61,6 +72,29 @@ export function updatePlatformConfig(updates) {
   const updated = { ...config, ...updates };
   savePlatformConfig(updated);
   return updated;
+}
+
+// ── Tax Management ──
+export function getRestaurantTaxRate(restaurantId) {
+  const config = getPlatformConfig();
+  const taxes = config.restaurantTaxes || {};
+  if (restaurantId && taxes[restaurantId] !== undefined) {
+    return taxes[restaurantId];
+  }
+  return config.defaultTaxPercentage ?? 5;
+}
+
+export function setRestaurantTaxRate(restaurantId, taxPercentage) {
+  const config = getPlatformConfig();
+  if (!config.restaurantTaxes) config.restaurantTaxes = {};
+  config.restaurantTaxes[restaurantId] = taxPercentage;
+  savePlatformConfig(config);
+}
+
+export function setDefaultTaxRate(taxPercentage) {
+  const config = getPlatformConfig();
+  config.defaultTaxPercentage = taxPercentage;
+  savePlatformConfig(config);
 }
 
 // ══════════════════════════════════════════
@@ -77,7 +111,7 @@ export function getSuperAdmin() {
 }
 
 export function saveSuperAdmin(admin) {
-  pSet(PLATFORM_KEYS.SUPER_ADMIN, admin);
+  pSetSync('superAdmin', PLATFORM_KEYS.SUPER_ADMIN, admin);
 }
 
 export function verifySuperAdmin(email, password) {
@@ -94,7 +128,7 @@ export function getAllRestaurants() {
 }
 
 export function saveAllRestaurants(restaurants) {
-  pSet(PLATFORM_KEYS.RESTAURANTS, restaurants);
+  pSetSync('restaurants', PLATFORM_KEYS.RESTAURANTS, restaurants);
 }
 
 export function getRestaurant(id) {
@@ -172,6 +206,9 @@ export function registerRestaurant(data) {
   restaurants.push(restaurant);
   saveAllRestaurants(restaurants);
 
+  // Also set default tax rate for this restaurant
+  setRestaurantTaxRate(restaurant.id, config.defaultTaxPercentage ?? 5);
+
   return { success: true, restaurant };
 }
 
@@ -235,6 +272,13 @@ export function deleteRestaurant(id) {
   // Remove from restaurant list
   const restaurants = getAllRestaurants().filter(r => r.id !== id);
   saveAllRestaurants(restaurants);
+
+  // Remove tax entry
+  const config = getPlatformConfig();
+  if (config.restaurantTaxes && config.restaurantTaxes[id]) {
+    delete config.restaurantTaxes[id];
+    savePlatformConfig(config);
+  }
 }
 
 // ══════════════════════════════════════════
@@ -285,7 +329,7 @@ export function isPlatformInitialized() {
 }
 
 export function markPlatformInitialized() {
-  pSet(PLATFORM_KEYS.PLATFORM_INIT, true);
+  pSetSync('initialized', PLATFORM_KEYS.PLATFORM_INIT, true);
 }
 
 export function initializePlatform() {
@@ -335,7 +379,7 @@ export function getPaymentRecords() {
 }
 
 export function savePaymentRecords(records) {
-  pSet(PLATFORM_KEYS.PAYMENT_RECORDS, records);
+  pSetSync('paymentRecords', PLATFORM_KEYS.PAYMENT_RECORDS, records);
 }
 
 export function getPaymentsByRestaurant(restaurantId) {
@@ -403,3 +447,9 @@ export function rejectPayment(paymentId, note = '') {
   savePaymentRecords(records);
   return payment;
 }
+
+// ══════════════════════════════════════════
+//  FIREBASE SYNC HELPER
+// ══════════════════════════════════════════
+
+export { syncPlatformData } from './firebase-store.js';
