@@ -15,7 +15,6 @@ import { getRestaurant, getPlatformConfig, submitPayment, getPaymentsByRestauran
 import { getSession, requireAuth, getRestaurantId, getSubscriptionStatus, logout } from './data/auth.js';
 import { syncRestaurantData, syncPlatformData } from './data/firebase-store.js';
 import { broadcast, EVENTS } from './data/broadcast.js';
-import { broadcast, EVENTS } from './data/broadcast.js';
 import { formatCurrency, formatTime, getStatusInfo, timeAgo, formatDate, generateId } from './utils/helpers.js';
 
 // Init
