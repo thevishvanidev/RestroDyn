@@ -27,17 +27,24 @@ setStoreNamespace(restaurantId);
 (async () => {
   await syncPlatformData();
 
-  // 🧪 ID REPAIR SYSTEM (Kitchen Edition)
-  // Ensure kitchen is looking at the same ID as the master cloud record for this user
+  // 🧪 ID REPAIR SYSTEM (Kitchen Edition - Refinement)
+  // Ensure kitchen stays on the ID that has the orders.
   const allRestos = getAllRestaurants();
-  const masterResto = allRestos.find(r => r.email === session.email);
+  const userRestos = allRestos.filter(r => r.email === session.email);
+  const masterResto = userRestos.length > 0 ? userRestos[0] : null;
   
   if (masterResto && masterResto.id !== restaurantId) {
-    console.log('🛠️ RestroDyn Kitchen: ID Mismatch detected. Repairing...', { current: restaurantId, master: masterResto.id });
-    const updatedSession = { ...session, restaurantId: masterResto.id, slug: masterResto.slug };
-    localStorage.setItem('restrodyn_session', JSON.stringify(updatedSession));
-    window.location.reload(); 
-    return;
+    const localOrders = getTodayOrders();
+    
+    if (localOrders.length === 0) {
+      console.log('🛠️ RestroDyn Kitchen: Empty view detected. Repairing to Master ID...', masterResto.id);
+      const updatedSession = { ...session, restaurantId: masterResto.id, slug: masterResto.slug };
+      localStorage.setItem('restrodyn_session', JSON.stringify(updatedSession));
+      window.location.reload(); 
+      return;
+    } else {
+      console.warn('⚠️ RestroDyn Kitchen: Multiple identities found. Staying on current ID as it has orders.');
+    }
   }
 
   await syncRestaurantData(restaurantId);

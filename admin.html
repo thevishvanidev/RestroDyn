@@ -304,10 +304,18 @@
   </div>
 
   <!-- Waiter Call Alert Overlay (Global) -->
-  <div class="waiter-alert glass-strong" id="waiter-alert">
-    <span class="waiter-alert-icon">🔔</span>
-    <span class="waiter-alert-text" id="waiter-alert-text">Table X is calling!</span>
-    <button class="btn btn-sm btn-primary" id="waiter-dismiss">Dismiss</button>
+  <div id="waiter-alert" class="waiter-alert">
+    <div class="waiter-alert-content">
+      <span id="waiter-alert-text">🛎️ Table 5 needs assistance!</span>
+      <button id="waiter-dismiss" class="btn btn-sm btn-light">Dismiss</button>
+    </div>
+  </div>
+
+  <!-- Identity Status (Hidden by default, used for recovery) -->
+  <div id="identity-status" class="identity-info" style="display:none; position:fixed; bottom:20px; right:20px; z-index:9999; background:var(--bg-card); padding:1rem; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3); border:1px solid var(--border-color);">
+    <div style="font-size:12px; color:var(--text-secondary); margin-bottom:5px;">Connected To:</div>
+    <div id="current-id-display" style="font-family:monospace; font-weight:bold; color:var(--accent);">ID: ---</div>
+    <div id="identity-action" style="margin-top:10px;"></div>
   </div>
 
   <script type="module" src="/js/admin-app.js"></script>

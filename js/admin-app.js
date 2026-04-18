@@ -47,18 +47,48 @@ let restaurant = null;
   // 2. Load restaurant info and REPAIR ID if needed
   restaurant = getRestaurant(restaurantId);
   
-  // ── ID REPAIR SYSTEM ──
-  // If we found a restaurant in the master list with THIS email but a DIFFERENT ID,
-  // it means we are in a 'Split-Brain' state. We MUST adopt the master ID.
+  // ── ID REPAIR SYSTEM (Refined) ──
+  // If we detect multiple restaurants for this email, we ensure the user is on the one with data.
   const allRestos = getAllRestaurants();
-  const masterResto = allRestos.find(r => r.email === session.email);
+  const userRestos = allRestos.filter(r => r.email === session.email);
+  const masterResto = userRestos.length > 0 ? userRestos[0] : null;
   
+  // Update UI Display
+  const idStatus = document.getElementById('identity-status');
+  const idDisplay = document.getElementById('current-id-display');
+  const idAction = document.getElementById('identity-action');
+  
+  if (idStatus && idDisplay) {
+    idStatus.style.display = 'block';
+    idDisplay.textContent = `ID: ${restaurantId}`;
+    
+    if (userRestos.length > 1 && masterResto.id !== restaurantId) {
+       idStatus.style.borderColor = 'var(--warning)';
+       idAction.innerHTML = `
+         <p style="font-size:11px; margin-bottom:5px;">⚠️ Multiple accounts found.</p>
+         <button class="btn btn-sm btn-warning" id="force-switch-btn">Switch to Master Data</button>
+       `;
+       document.getElementById('force-switch-btn')?.addEventListener('click', () => {
+         const updatedSession = { ...session, restaurantId: masterResto.id, slug: masterResto.slug };
+         localStorage.setItem('restrodyn_session', JSON.stringify(updatedSession));
+         window.location.reload();
+       });
+    }
+  }
+  
+  // If we find a different ID that is the "Master" (usually the first one created)
   if (masterResto && masterResto.id !== restaurantId) {
-    console.log('🛠️ RestroDyn: Split-brain detected. Repairing ID...', { session: restaurantId, master: masterResto.id });
-    const updatedSession = { ...session, restaurantId: masterResto.id, slug: masterResto.slug };
-    localStorage.setItem('restrodyn_session', JSON.stringify(updatedSession));
-    window.location.reload(); // Hard reload to pick up new namespace
-    return;
+    // Only auto-migrate if we have NO items/orders in the current local namespace
+    const localItems = getMenuItems();
+    const localOrders = getOrders();
+    
+    if (localItems.length === 0 && localOrders.length === 0) {
+      console.log('🛠️ RestroDyn: Auto-repairing to Master ID...', masterResto.id);
+      const updatedSession = { ...session, restaurantId: masterResto.id, slug: masterResto.slug };
+      localStorage.setItem('restrodyn_session', JSON.stringify(updatedSession));
+      window.location.reload(); 
+      return;
+    }
   }
   // ──────────────────────
 
