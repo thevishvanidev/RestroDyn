@@ -89,14 +89,17 @@ let restaurant = null;
 
     if (key === 'waiterAlerts') {
       const lastAlert = value[value.length - 1];
-      if (lastAlert && Date.now() - lastAlert.time < 30000) {
+      if (lastAlert && lastAlert.status === 'new' && Date.now() - lastAlert.time < 30000) {
         const waiterAlert = document.getElementById('waiter-alert');
         const waiterAlertText = document.getElementById('waiter-alert-text');
         if (waiterAlert && waiterAlertText) {
           waiterAlertText.textContent = `🛎️ Table ${lastAlert.tableNumber} needs assistance!`;
+          waiterAlert.dataset.alertId = lastAlert.id;
           waiterAlert.classList.add('active');
-          setTimeout(() => waiterAlert.classList.remove('active'), 10000);
+          setTimeout(() => waiterAlert.classList.remove('active'), 15000);
         }
+      } else if (lastAlert && lastAlert.status === 'dismissed') {
+        document.getElementById('waiter-alert')?.classList.remove('active');
       }
     }
   });
@@ -106,7 +109,12 @@ let restaurant = null;
 
 // Dismiss waiter alert
 document.getElementById('waiter-dismiss')?.addEventListener('click', () => {
-  document.getElementById('waiter-alert')?.classList.remove('active');
+  const waiterAlert = document.getElementById('waiter-alert');
+  const alertId = waiterAlert.dataset.alertId;
+  if (alertId) {
+    dismissWaiterAlert(alertId);
+  }
+  waiterAlert.classList.remove('active');
 });
 
 // Theme toggles

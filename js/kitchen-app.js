@@ -41,15 +41,28 @@ setStoreNamespace(restaurantId);
       }
     } else if (key === 'waiterAlerts') {
       const lastAlert = value[value.length - 1];
-      if (lastAlert && Date.now() - lastAlert.time < 30000) {
+      if (lastAlert && lastAlert.status === 'new' && Date.now() - lastAlert.time < 30000) {
         waiterAlertText.textContent = `🛎️ Table ${lastAlert.tableNumber} needs assistance!`;
+        waiterAlert.dataset.alertId = lastAlert.id;
         waiterAlert.classList.add('active');
         playNotificationSound();
-        setTimeout(() => waiterAlert.classList.remove('active'), 10000);
+        setTimeout(() => waiterAlert.classList.remove('active'), 15000);
+      } else if (lastAlert && lastAlert.status === 'dismissed') {
+        waiterAlert.classList.remove('active');
       }
     }
   });
 })();
+
+// Dismiss waiter alert
+document.getElementById('waiter-dismiss')?.addEventListener('click', () => {
+  const waiterAlert = document.getElementById('waiter-alert');
+  const alertId = waiterAlert.dataset.alertId;
+  if (alertId) {
+    dismissWaiterAlert(alertId);
+  }
+  waiterAlert.classList.remove('active');
+});
 
 const restaurant = getRestaurant(restaurantId);
 

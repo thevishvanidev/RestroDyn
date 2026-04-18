@@ -221,4 +221,26 @@ export function resetAll() {
 }
 
 // ── Firebase Sync Helper ──
-export { syncRestaurantData } from './firebase-store.js';
+
+// ── Waiter Alerts ──
+export function getWaiterAlerts() {
+  return get(getKey('waiterAlerts')) || [];
+}
+
+export function addWaiterAlert(tableNumber) {
+  const alerts = getWaiterAlerts();
+  // Keep only last 10 alerts to save space
+  const newAlerts = [...alerts.slice(-9), { id: generateId(), tableNumber, time: Date.now(), status: 'new' }];
+  setSync('waiterAlerts', getKey('waiterAlerts'), newAlerts);
+  return newAlerts;
+}
+
+export function dismissWaiterAlert(alertId) {
+  const alerts = getWaiterAlerts();
+  const index = alerts.findIndex(a => a.id === alertId);
+  if (index !== -1) {
+    alerts[index].status = 'dismissed';
+    setSync('waiterAlerts', getKey('waiterAlerts'), alerts);
+  }
+}
+
