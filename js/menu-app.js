@@ -23,24 +23,33 @@ let currentRestaurant = null;
 let taxPercentage = 5; // Default, will be loaded from config
 
 // Async init to load Firebase data
+// Async init to load Firebase data
 async function initApp() {
-  await seedData();
-
-  // Sync platform data for tax rates
+  // 1. Sync platform metadata (tax rates, restaurant list) first - CRITICAL
   await syncPlatformData();
 
   if (restaurantSlug) {
+    // 2. High-speed path for QR scans/specific menus:
+    // Skip demo seeding and jump straight to the restaurant
     currentRestaurant = getRestaurantBySlug(restaurantSlug);
+    
+    if (currentRestaurant) {
+      await syncRestaurantData(currentRestaurant.id);
+      setStoreNamespace(currentRestaurant.id);
+    } else {
+      showRestaurantNotFound();
+      return;
+    }
+  } else {
+    // 3. Demo/Landing path:
+    // Populate demo data if no specific restaurant is requested
+    await seedData();
+    currentRestaurant = getRestaurantBySlug('demo');
+    if (currentRestaurant) {
+      await syncRestaurantData(currentRestaurant.id);
+      setStoreNamespace(currentRestaurant.id);
+    }
   }
-
-  // If no restaurant found, show error (don't fallback to demo)
-  if (!currentRestaurant) {
-    showRestaurantNotFound();
-    return;
-  }
-
-  // Sync restaurant data from Firebase
-  await syncRestaurantData(currentRestaurant.id);
 
   // Set namespace for data
   setStoreNamespace(currentRestaurant.id);
