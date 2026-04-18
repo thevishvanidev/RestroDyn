@@ -53,9 +53,14 @@ export async function fbGet(collectionName, docId, cacheKey) {
       const data = snap.data()?.value ?? snap.data();
       localSet(cacheKey, data); // Update cache
       return data;
+    } else {
+      // Document does not exist in Firestore — perform UP-SYNC
+      const localData = localGet(cacheKey);
+      if (localData !== null && localData !== undefined) {
+        await setDoc(doc(db, collectionName, docId), { value: localData, updatedAt: Date.now() }, { merge: true }).catch(console.warn);
+      }
+      return localData;
     }
-    // Not in Firestore yet — try local cache
-    return localGet(cacheKey);
   } catch (e) {
     console.warn(`Firestore read failed for ${collectionName}/${docId}, using cache`, e);
     return localGet(cacheKey);
@@ -157,6 +162,12 @@ export async function preloadFirestoreData(items) {
       if (snap.exists()) {
         const data = snap.data()?.value ?? snap.data();
         localSet(cacheKey, data);
+      } else {
+        // Document does not exist in Firestore — perform UP-SYNC
+        const localData = localGet(cacheKey);
+        if (localData !== null && localData !== undefined) {
+          await setDoc(doc(db, coll, docId), { value: localData, updatedAt: Date.now() }, { merge: true }).catch(console.warn);
+        }
       }
     } catch (e) {
       console.warn(`Preload failed for ${coll}/${docId}`, e);
