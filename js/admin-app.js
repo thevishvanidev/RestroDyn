@@ -12,7 +12,7 @@ import {
   setStoreNamespace, getPaymentSettings, savePaymentSettings
 } from './data/store.js';
 import { getRestaurant, getPlatformConfig, submitPayment, getPaymentsByRestaurant } from './data/platform-store.js';
-import { getSession, requireAuth, getRestaurantId, getSubscriptionStatus, logout } from './data/auth.js';
+import { getSession, requireAuth, getRestaurantId, getRestaurantSlug, getSubscriptionStatus, logout } from './data/auth.js';
 import { syncRestaurantData, syncPlatformData } from './data/firebase-store.js';
 import { broadcast, EVENTS } from './data/broadcast.js';
 import { formatCurrency, formatTime, getStatusInfo, timeAgo, formatDate, generateId } from './utils/helpers.js';
@@ -598,7 +598,8 @@ document.getElementById('generate-qr-btn').addEventListener('click', async () =>
     const activeResto = getRestaurant(activeRestaurantId);
     const settings = getSettings();
     
-    const slug = activeResto?.slug || restaurant?.slug || 'demo';
+    // Pinpoint the exact restaurant slug for the QR URL
+    const slug = getRestaurantSlug() || activeResto?.slug || restaurant?.slug || 'demo';
     const restaurantName = activeResto?.name || settings.restaurantName || restaurant?.name || 'RestroDyn';
 
     let html = '';
