@@ -69,6 +69,16 @@ async function initApp() {
   // Initial Render
   renderCategories();
   renderMenu();
+
+  // 4. Hide loader with a slight delay for smooth transition
+  setTimeout(() => {
+    const loader = document.getElementById('menu-loader');
+    if (loader) {
+      loader.classList.add('fade-out');
+      // Completely remove from accessibility tree after transition
+      setTimeout(() => loader.style.display = 'none', 500);
+    }
+  }, 400);
 }
 
 function showRestaurantNotFound() {
@@ -702,4 +712,8 @@ document.addEventListener('click', (e) => {
 });
 
 // ── Start App ──
-initApp();
+initApp().catch(err => {
+  console.error('App init failed:', err);
+  const loader = document.getElementById('menu-loader');
+  if (loader) loader.style.display = 'none';
+});
