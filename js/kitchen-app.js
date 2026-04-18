@@ -26,6 +26,20 @@ setStoreNamespace(restaurantId);
 // Async init
 (async () => {
   await syncPlatformData();
+
+  // 🧪 ID REPAIR SYSTEM (Kitchen Edition)
+  // Ensure kitchen is looking at the same ID as the master cloud record for this user
+  const allRestos = getAllRestaurants();
+  const masterResto = allRestos.find(r => r.email === session.email);
+  
+  if (masterResto && masterResto.id !== restaurantId) {
+    console.log('🛠️ RestroDyn Kitchen: ID Mismatch detected. Repairing...', { current: restaurantId, master: masterResto.id });
+    const updatedSession = { ...session, restaurantId: masterResto.id, slug: masterResto.slug };
+    localStorage.setItem('restrodyn_session', JSON.stringify(updatedSession));
+    window.location.reload(); 
+    return;
+  }
+
   await syncRestaurantData(restaurantId);
   await seedData();
   loadOrders();
