@@ -50,11 +50,36 @@ function mergeData(local, remote, cacheKey) {
 
   // If both are arrays and look like ID-based lists (like restaurants or orders)
   if (Array.isArray(local) && Array.isArray(remote)) {
-    const combined = [...remote];
+    // 1. Self-deduplicate the remote array first (in case the cloud has duplicates)
+    const uniqueRemote = [];
+    remote.forEach(rItem => {
+      const existsIdx = uniqueRemote.findIndex(uItem => 
+        (rItem.id && uItem.id === rItem.id) || 
+        (rItem.email && uItem.email === rItem.email && rItem.email.includes('@')) ||
+        (rItem.slug && uItem.slug === rItem.slug)
+      );
+      if (existsIdx === -1) {
+        uniqueRemote.push(rItem);
+      } else {
+        // Merge duplicates in remote, preferring the one with more data
+        uniqueRemote[existsIdx] = { ...uniqueRemote[existsIdx], ...rItem };
+      }
+    });
+
+    const combined = [...uniqueRemote];
     local.forEach(lItem => {
-      const exists = combined.some(rItem => (lItem.id && rItem.id === lItem.id) || (lItem.email && rItem.email === lItem.email));
-      if (!exists) {
+      // Identity check: match by ID, Email, or Slug (for restaurants)
+      const existsIdx = combined.findIndex(rItem => 
+        (lItem.id && rItem.id === lItem.id) || 
+        (lItem.email && rItem.email === lItem.email && lItem.email.includes('@')) ||
+        (lItem.slug && rItem.slug === lItem.slug)
+      );
+
+      if (existsIdx === -1) {
         combined.push(lItem);
+      } else {
+        // If it exists, merge the objects to ensure no data loss
+        combined[existsIdx] = { ...lItem, ...combined[existsIdx] };
       }
     });
     return combined;

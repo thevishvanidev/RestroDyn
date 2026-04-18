@@ -44,9 +44,24 @@ let restaurant = null;
   // 1. First sync existing data from cloud
   await syncRestaurantData(restaurantId);
   
-  // 2. Load restaurant info
+  // 2. Load restaurant info and REPAIR ID if needed
   restaurant = getRestaurant(restaurantId);
   
+  // ── ID REPAIR SYSTEM ──
+  // If we found a restaurant in the master list with THIS email but a DIFFERENT ID,
+  // it means we are in a 'Split-Brain' state. We MUST adopt the master ID.
+  const allRestos = getAllRestaurants();
+  const masterResto = allRestos.find(r => r.email === session.email);
+  
+  if (masterResto && masterResto.id !== restaurantId) {
+    console.log('🛠️ RestroDyn: Split-brain detected. Repairing ID...', { session: restaurantId, master: masterResto.id });
+    const updatedSession = { ...session, restaurantId: masterResto.id, slug: masterResto.slug };
+    localStorage.setItem('restrodyn_session', JSON.stringify(updatedSession));
+    window.location.reload(); // Hard reload to pick up new namespace
+    return;
+  }
+  // ──────────────────────
+
   // 3. Update UI branding
   const sidebarBrand = document.querySelector('.sidebar-brand a');
   if (sidebarBrand && restaurant) {
