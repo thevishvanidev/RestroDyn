@@ -5,7 +5,7 @@
 import { initTheme, createThemeToggle } from './components/theme-toggle.js';
 import { showToast } from './components/toast.js';
 import { seedData } from './data/seed-data.js';
-import { getCategories, getMenuItems, getSettings, getPaymentSettings, addOrder, getOrder, setStoreNamespace } from './data/store.js';
+import { getCategories, getMenuItems, getSettings, getPaymentSettings, addOrder, getOrder, setStoreNamespace, addWaiterAlert } from './data/store.js';
 import { getRestaurantBySlug, getAllRestaurants, getRestaurantTaxRate } from './data/platform-store.js';
 import { syncRestaurantData, syncPlatformData, subscribeToRestaurantData } from './data/firebase-store.js';
 import { broadcast, EVENTS } from './data/broadcast.js';
@@ -66,7 +66,7 @@ async function initApp() {
 
   // 4. Start real-time listener for menu/settings changes
   if (currentRestaurant) {
-    subscribeToRestaurantData(currentRestaurant.id, (key) => {
+    subscribeToRestaurantData(currentRestaurant.id, (key, value) => {
       if (key === 'items' || key === 'categories') {
         renderCategories();
         renderMenu();
@@ -75,6 +75,17 @@ async function initApp() {
         restaurantName.textContent = currentRestaurant.name || newSettings.restaurantName;
         window._menuSettings = newSettings;
         renderMenu();
+      } else if (key === 'orders') {
+        // Real-time order status tracking for customers
+        if (currentOrderId) {
+          const updatedOrder = value.find(o => o.id === currentOrderId);
+          if (updatedOrder) {
+            updateTrackerTimeline(updatedOrder.status);
+            // Optionally show toast if status changed
+            const info = getStatusInfo(updatedOrder.status);
+            showToast({ title: `Order ${info.label}`, message: info.icon, type: 'info' });
+          }
+        }
       }
     });
   }
@@ -666,14 +677,8 @@ function updateTrackerTimeline(currentStatus) {
   }).join('');
 }
 
-// Listen for status updates
-broadcast.on(EVENTS.ORDER_STATUS_CHANGE, (payload) => {
-  if (payload.id === currentOrderId) {
-    updateTrackerTimeline(payload.status);
-    const info = getStatusInfo(payload.status);
-    showToast({ title: `Order ${info.label}`, message: info.icon, type: 'info' });
-  }
-});
+// Tracker timeline logic is now handled by the real-time cloud listener in initApp()
+
 
 // Close tracker
 document.getElementById('tracker-new-order').addEventListener('click', () => {
@@ -703,7 +708,10 @@ document.querySelectorAll('.filter-chip').forEach(chip => {
 document.getElementById('call-waiter-btn').addEventListener('click', () => {
   const btn = document.getElementById('call-waiter-btn');
   btn.classList.add('calling');
-  broadcast.send(EVENTS.CALL_WAITER, { tableNumber, time: Date.now() });
+  
+  // 🛎️ NEW: Send real-time alert to cloud for all staff devices
+  addWaiterAlert(tableNumber);
+  
   showToast({ title: 'Waiter Called', message: `A staff member will come to Table ${tableNumber}`, type: 'info' });
   setTimeout(() => btn.classList.remove('calling'), 3000);
 });

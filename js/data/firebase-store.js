@@ -266,7 +266,7 @@ export async function syncRestaurantData(restaurantId) {
 
   restaurantSyncPromises[restaurantId] = (async () => {
     const prefix = `restrodyn_${restaurantId}_`;
-    const keys = ['categories', 'items', 'orders', 'settings', 'initialized', 'paymentSettings'];
+    const keys = ['categories', 'items', 'orders', 'settings', 'initialized', 'paymentSettings', 'waiterAlerts'];
 
     await preloadFirestoreData(
       keys.map(key => ({
@@ -289,7 +289,7 @@ export function subscribeToRestaurantData(restaurantId, onUpdate) {
   if (!useFirebase) return () => {};
   
   const prefix = `restrodyn_${restaurantId}_`;
-  const keys = ['categories', 'items', 'orders', 'settings', 'initialized', 'paymentSettings'];
+  const keys = ['categories', 'items', 'orders', 'settings', 'initialized', 'paymentSettings', 'waiterAlerts'];
   const unsubscribers = [];
 
   keys.forEach(key => {

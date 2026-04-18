@@ -86,10 +86,28 @@ let restaurant = null;
     if (currentSection === 'settings') renderSettings();
     
     showToast({ title: 'Data Synced', message: `Cloud update received for ${key}`, type: 'info', duration: 2000 });
+
+    if (key === 'waiterAlerts') {
+      const lastAlert = value[value.length - 1];
+      if (lastAlert && Date.now() - lastAlert.time < 30000) {
+        const waiterAlert = document.getElementById('waiter-alert');
+        const waiterAlertText = document.getElementById('waiter-alert-text');
+        if (waiterAlert && waiterAlertText) {
+          waiterAlertText.textContent = `🛎️ Table ${lastAlert.tableNumber} needs assistance!`;
+          waiterAlert.classList.add('active');
+          setTimeout(() => waiterAlert.classList.remove('active'), 10000);
+        }
+      }
+    }
   });
 
   renderDashboard();
 })();
+
+// Dismiss waiter alert
+document.getElementById('waiter-dismiss')?.addEventListener('click', () => {
+  document.getElementById('waiter-alert')?.classList.remove('active');
+});
 
 // Theme toggles
 const themeSlot = document.getElementById('admin-theme-slot');

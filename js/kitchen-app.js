@@ -29,6 +29,26 @@ setStoreNamespace(restaurantId);
   await syncRestaurantData(restaurantId);
   await seedData();
   loadOrders();
+
+  // Start real-time listener
+  subscribeToRestaurantData(restaurantId, (key, value) => {
+    if (key === 'orders') {
+      const prevCount = orders.length;
+      loadOrders();
+      if (orders.length > prevCount) {
+        playNotificationSound();
+        showToast({ title: 'New Order Received', message: 'A new order has arrived!', type: 'success' });
+      }
+    } else if (key === 'waiterAlerts') {
+      const lastAlert = value[value.length - 1];
+      if (lastAlert && Date.now() - lastAlert.time < 30000) {
+        waiterAlertText.textContent = `🛎️ Table ${lastAlert.tableNumber} needs assistance!`;
+        waiterAlert.classList.add('active');
+        playNotificationSound();
+        setTimeout(() => waiterAlert.classList.remove('active'), 10000);
+      }
+    }
+  });
 })();
 
 const restaurant = getRestaurant(restaurantId);
