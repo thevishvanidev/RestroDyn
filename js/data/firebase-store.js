@@ -36,6 +36,34 @@ function localRemove(key) {
 }
 
 // ═══════════════════════════════════════
+//  Sync Data Mergers
+// ═══════════════════════════════════════
+
+/**
+ * Merges local and remote data to prevent data loss.
+ * Specifically handles arrays of objects with IDs (like restaurants).
+ */
+function mergeData(local, remote, cacheKey) {
+  if (local === null || local === undefined) return remote;
+  if (remote === null || remote === undefined) return local;
+
+  // If both are arrays and look like ID-based lists (like restaurants or orders)
+  if (Array.isArray(local) && Array.isArray(remote)) {
+    const combined = [...remote];
+    local.forEach(lItem => {
+      const exists = combined.some(rItem => (lItem.id && rItem.id === lItem.id) || (lItem.email && rItem.email === lItem.email));
+      if (!exists) {
+        combined.push(lItem);
+      }
+    });
+    return combined;
+  }
+
+  // Default: Remote wins for single objects/settings but we log it
+  return remote;
+}
+
+// ═══════════════════════════════════════
 //  Firestore Document Operations
 // ═══════════════════════════════════════
 
@@ -51,18 +79,18 @@ export async function fbGet(collectionName, docId, cacheKey) {
 
   try {
     const snap = await getDoc(doc(db, collectionName, docId));
-    if (snap.exists()) {
-      const data = snap.data()?.value ?? snap.data();
-      localSet(cacheKey, data); // Update cache
-      return data;
-    } else {
-      // Document does not exist in Firestore — perform UP-SYNC
-      const localData = localGet(cacheKey);
-      if (localData !== null && localData !== undefined) {
-        await setDoc(doc(db, collectionName, docId), { value: localData, updatedAt: Date.now() }, { merge: true }).catch(console.warn);
-      }
-      return localData;
+    const remoteData = snap.exists() ? (snap.data()?.value ?? snap.data()) : null;
+    const localData = localGet(cacheKey);
+
+    const merged = mergeData(localData, remoteData, cacheKey);
+
+    // If we merged local data that wasn't in Cloud, sync it back up
+    if (JSON.stringify(merged) !== JSON.stringify(remoteData)) {
+      await setDoc(doc(db, collectionName, docId), { value: merged, updatedAt: Date.now() }, { merge: true }).catch(console.warn);
     }
+
+    localSet(cacheKey, merged);
+    return merged;
   } catch (e) {
     console.warn(`Firestore read failed for ${collectionName}/${docId}, using cache`, e);
     return localGet(cacheKey);
@@ -161,15 +189,17 @@ export async function preloadFirestoreData(items) {
   const promises = items.map(async ({ collection: coll, docId, cacheKey }) => {
     try {
       const snap = await getDoc(doc(db, coll, docId));
-      if (snap.exists()) {
-        const data = snap.data()?.value ?? snap.data();
-        localSet(cacheKey, data);
-      } else {
-        // Document does not exist in Firestore — perform UP-SYNC
-        const localData = localGet(cacheKey);
-        if (localData !== null && localData !== undefined) {
-          await setDoc(doc(db, coll, docId), { value: localData, updatedAt: Date.now() }, { merge: true }).catch(console.warn);
-        }
+      const remoteData = snap.exists() ? (snap.data()?.value ?? snap.data()) : null;
+      const localData = localGet(cacheKey);
+
+      const merged = mergeData(localData, remoteData, cacheKey);
+
+      // Save locally
+      localSet(cacheKey, merged);
+
+      // If local data exists that isn't in remote, push it up (Merge back-sync)
+      if (JSON.stringify(merged) !== JSON.stringify(remoteData)) {
+        await setDoc(doc(db, coll, docId), { value: merged, updatedAt: Date.now() }, { merge: true }).catch(console.warn);
       }
     } catch (e) {
       console.warn(`Preload failed for ${coll}/${docId}`, e);
