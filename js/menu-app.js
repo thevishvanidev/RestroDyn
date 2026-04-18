@@ -5,11 +5,37 @@
 import { initTheme, createThemeToggle } from './components/theme-toggle.js';
 import { showToast } from './components/toast.js';
 import { seedData } from './data/seed-data.js';
-import { getCategories, getMenuItems, getSettings, getPaymentSettings, addOrder, getOrder, setStoreNamespace, addWaiterAlert } from './data/store.js';
-import { getRestaurantBySlug, getAllRestaurants, getRestaurantTaxRate } from './data/platform-store.js';
-import { syncCustomerEssentials, subscribeToRestaurantData, syncRestaurantData, syncPlatformData } from './data/firebase-store.js';
+import {
+  getCategories,
+  getMenuItems,
+  getSettings,
+  getPaymentSettings,
+  addOrder,
+  getOrder,
+  setStoreNamespace,
+  addWaiterAlert
+} from './data/store.js';
+import {
+  getRestaurantBySlug,
+  getAllRestaurants,
+  getRestaurantTaxRate
+} from './data/platform-store.js';
+import {
+  syncCustomerEssentials,
+  subscribeToRestaurantData,
+  syncRestaurantData,
+  syncPlatformData
+} from './data/firebase-store.js';
 import { broadcast, EVENTS } from './data/broadcast.js';
-import { formatCurrency, getTagInfo, getStatusInfo, debounce, fuzzyMatch, elapsedMinutes, formatTime } from './utils/helpers.js';
+import {
+  formatCurrency,
+  getTagInfo,
+  getStatusInfo,
+  debounce,
+  fuzzyMatch,
+  elapsedMinutes,
+  formatTime
+} from './utils/helpers.js';
 
 // ── Init ──
 initTheme();
