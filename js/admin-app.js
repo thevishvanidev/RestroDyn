@@ -15,7 +15,8 @@ import { getRestaurant, getPlatformConfig, submitPayment, getPaymentsByRestauran
 import { getSession, requireAuth, getRestaurantId, getSubscriptionStatus, logout } from './data/auth.js';
 import { syncRestaurantData, syncPlatformData } from './data/firebase-store.js';
 import { broadcast, EVENTS } from './data/broadcast.js';
-import { formatCurrency, formatTime, getStatusInfo, timeAgo, formatDate } from './utils/helpers.js';
+import { broadcast, EVENTS } from './data/broadcast.js';
+import { formatCurrency, formatTime, getStatusInfo, timeAgo, formatDate, generateId } from './utils/helpers.js';
 
 // Init
 initTheme();
@@ -490,7 +491,8 @@ function openItemModal(itemId) {
   document.getElementById('modal-add-cat-btn').addEventListener('click', () => {
     const name = prompt('Enter new category name:');
     if (name && name.trim()) {
-      const newCat = { id: crypto.randomUUID(), name: name.trim(), icon: '🍽️', order: categories.length };
+      const categories = getCategories();
+      const newCat = { id: generateId(), name: name.trim(), icon: '🍽️', order: categories.length };
       addCategory(newCat);
       showToast({ title: 'Category added', type: 'success' });
       // Re-render modal to reflect new category option

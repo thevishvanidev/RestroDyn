@@ -6,6 +6,7 @@
 import { saveCategories, saveMenuItems, getSettings, saveSettings, markInitialized, isInitialized, setStoreNamespace } from './store.js';
 import { initializePlatform, getAllRestaurants, syncPlatformData } from './platform-store.js';
 import { syncRestaurantData } from './firebase-store.js';
+import { generateId } from '../utils/helpers.js';
 
 const CATEGORIES = [
   { id: 'cat-starters', name: 'Starters', icon: '🥗', order: 0 },
@@ -249,10 +250,10 @@ export function seedRestaurantDefaults(restaurantId, restaurantName) {
   if (!isInitialized()) {
     // Start with a basic set of categories
     saveCategories([
-      { id: crypto.randomUUID(), name: 'Starters', icon: '🥗', order: 0 },
-      { id: crypto.randomUUID(), name: 'Main Course', icon: '🍛', order: 1 },
-      { id: crypto.randomUUID(), name: 'Desserts', icon: '🍰', order: 2 },
-      { id: crypto.randomUUID(), name: 'Beverages', icon: '🥤', order: 3 },
+      { id: generateId(), name: 'Starters', icon: '🥗', order: 0 },
+      { id: generateId(), name: 'Main Course', icon: '🍛', order: 1 },
+      { id: generateId(), name: 'Desserts', icon: '🍰', order: 2 },
+      { id: generateId(), name: 'Beverages', icon: '🥤', order: 3 },
     ]);
     saveMenuItems([]);
     saveSettings({

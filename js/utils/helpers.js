@@ -79,7 +79,11 @@ export function escapeHtml(str) {
 }
 
 export function generateId() {
-  return crypto.randomUUID();
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback for non-secure contexts (HTTP/IP-based testing)
+  return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 9);
 }
 
 // Simple fuzzy search

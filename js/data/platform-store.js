@@ -3,6 +3,7 @@
 // Now with Firebase write-through sync
 
 import { platformWrite, syncPlatformData, useFirebase } from './firebase-store.js';
+import { generateId } from '../utils/helpers.js';
 
 const PLATFORM_KEYS = {
   RESTAURANTS: 'restrodyn_platform_restaurants',
@@ -179,7 +180,7 @@ export function registerRestaurant(data) {
   const trialEnd = now + (config.trialDays * 24 * 60 * 60 * 1000);
 
   const restaurant = {
-    id: crypto.randomUUID(),
+    id: generateId(),
     name: data.name,
     ownerName: data.ownerName || '',
     slug: generateSlug(data.name),
@@ -389,7 +390,7 @@ export function getPaymentsByRestaurant(restaurantId) {
 export function submitPayment(data) {
   const records = getPaymentRecords();
   const payment = {
-    id: crypto.randomUUID(),
+    id: generateId(),
     restaurantId: data.restaurantId,
     restaurantName: data.restaurantName,
     planId: data.planId,

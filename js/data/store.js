@@ -3,6 +3,7 @@
 // Now supports restaurant namespacing and Firebase write-through sync
 
 import { restaurantWrite, syncRestaurantData } from './firebase-store.js';
+import { generateId } from '../utils/helpers.js';
 
 let _restaurantId = null;
 
@@ -55,7 +56,7 @@ export function saveCategories(categories) {
 
 export function addCategory(category) {
   const cats = getCategories();
-  cats.push({ ...category, id: crypto.randomUUID() });
+  cats.push({ ...category, id: generateId() });
   saveCategories(cats);
   return cats;
 }
@@ -94,7 +95,7 @@ export function getItem(id) {
 
 export function addMenuItem(item) {
   const items = getMenuItems();
-  items.push({ ...item, id: crypto.randomUUID(), createdAt: Date.now() });
+  items.push({ ...item, id: generateId(), createdAt: Date.now() });
   saveMenuItems(items);
   return items;
 }
@@ -124,7 +125,7 @@ export function addOrder(order) {
   const orders = getOrders();
   const newOrder = {
     ...order,
-    id: crypto.randomUUID(),
+    id: generateId(),
     orderNumber: generateOrderNumber(),
     status: 'new',
     createdAt: Date.now(),
