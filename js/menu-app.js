@@ -1,5 +1,5 @@
-// ── RestroDyn Customer Menu App ──
-// Restaurant-aware: loads data from ?restaurant=slug&table=X
+// ── RestroDyn Customer Menu App v1.0.1 ──
+// Updated: 2026-04-19 (Fixed Vercel Truncation)
 // Features: Dynamic tax, UPI/Cash payment, Tip for UPI
 
 import { initTheme, createThemeToggle } from './components/theme-toggle.js';
