@@ -10,11 +10,18 @@ import { formatCurrency } from './utils/helpers.js';
 // Initialize
 initTheme();
 
-// Async init
+// Initialize core UI immediately (so mobile menus work instantly)
+initLandingContent();
+
+// Async init for dynamic data loaded from Firebase
 (async () => {
-  await syncPlatformData();
-  await seedData();
-  initLandingContent();
+  try {
+    await syncPlatformData();
+    await seedData();
+    renderPricingGrid();
+  } catch (e) {
+    console.warn("Dynamic landing data failed to load:", e);
+  }
 })();
 
 function initLandingContent() {
@@ -36,24 +43,7 @@ function initLandingContent() {
     trustCount.textContent = '100+';
   }
 
-  // Pricing section
-  const pricingGrid = document.getElementById('pricing-grid');
-  if (pricingGrid) {
-    const config = getPlatformConfig();
-    pricingGrid.innerHTML = config.subscriptionPlans.map((plan, i) => `
-      <div class="pricing-card glass ${i === 1 ? 'pricing-popular' : ''}">
-        ${i === 1 ? '<div class="pricing-popular-badge">⭐ Most Popular</div>' : ''}
-        <div class="pricing-name">${plan.name}</div>
-        <div class="pricing-price">${formatCurrency(plan.price)}<span>/${plan.duration} days</span></div>
-        <ul class="pricing-features">
-          ${(plan.features || []).map(f => `<li>✓ ${f}</li>`).join('')}
-        </ul>
-        <a href="/register.html" class="btn ${i === 1 ? 'btn-primary' : 'btn-secondary'} btn-lg pricing-cta">
-          Start Free Trial
-        </a>
-      </div>
-    `).join('');
-  }
+  /* Pricing grid rendering moved to renderPricingGrid() */
 
   // Nav scroll effect
   const nav = document.getElementById('main-nav');
@@ -169,5 +159,27 @@ function initLandingContent() {
   // Also show on iOS after delay
   if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !window.matchMedia('(display-mode: standalone)').matches) {
     setTimeout(() => showInstallBanner(), 3000);
+  }
+}
+
+function renderPricingGrid() {
+  const pricingGrid = document.getElementById('pricing-grid');
+  if (pricingGrid) {
+    const config = getPlatformConfig();
+    if (!config || !config.subscriptionPlans) return;
+    
+    pricingGrid.innerHTML = config.subscriptionPlans.map((plan, i) => `
+      <div class="pricing-card glass ${i === 1 ? 'pricing-popular' : ''}">
+        ${i === 1 ? '<div class="pricing-popular-badge">⭐ Most Popular</div>' : ''}
+        <div class="pricing-name">${plan.name}</div>
+        <div class="pricing-price">${formatCurrency(plan.price)}<span>/${plan.duration} days</span></div>
+        <ul class="pricing-features">
+          ${(plan.features || []).map(f => `<li>✓ ${f}</li>`).join('')}
+        </ul>
+        <a href="/register.html" class="btn ${i === 1 ? 'btn-primary' : 'btn-secondary'} btn-lg pricing-cta">
+          Start Free Trial
+        </a>
+      </div>
+    `).join('');
   }
 }
