@@ -4,10 +4,10 @@
 import { initTheme, createThemeToggle } from './components/theme-toggle.js';
 import { showToast } from './components/toast.js';
 import { seedData } from './data/seed-data.js';
-import { getOrders, updateOrderStatus, getTodayOrders, setStoreNamespace } from './data/store.js';
+import { getOrders, updateOrderStatus, getTodayOrders, setStoreNamespace, dismissWaiterAlert } from './data/store.js';
 import { getSession, requireAuth, getRestaurantId } from './data/auth.js';
 import { getRestaurant } from './data/platform-store.js';
-import { syncRestaurantData, syncPlatformData } from './data/firebase-store.js';
+import { syncRestaurantData, syncPlatformData, subscribeToRestaurantData } from './data/firebase-store.js';
 import { broadcast, EVENTS } from './data/broadcast.js';
 import { formatTime, elapsedMinutes } from './utils/helpers.js';
 
