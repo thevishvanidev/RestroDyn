@@ -13,7 +13,8 @@ import {
 } from './data/store.js';
 import { getRestaurant, getPlatformConfig, submitPayment, getPaymentsByRestaurant } from './data/platform-store.js';
 import { getSession, requireAuth, getRestaurantId, getRestaurantSlug, getSubscriptionStatus, logout } from './data/auth.js';
-import { syncRestaurantData, syncPlatformData } from './data/firebase-store.js';
+import { syncRestaurantData, syncPlatformData, subscribeToRestaurantData } from './data/firebase-store.js';
+import { seedRestaurantDefaults } from './data/seed-data.js';
 import { broadcast, EVENTS } from './data/broadcast.js';
 import { formatCurrency, formatTime, getStatusInfo, timeAgo, formatDate, generateId } from './utils/helpers.js';
 
@@ -39,12 +40,14 @@ let restaurant = null;
 // Async init: sync Firebase data then seed
 (async () => {
   await syncPlatformData();
+  
+  // 1. First sync existing data from cloud
   await syncRestaurantData(restaurantId);
   
-  // Now load restaurant info safely since Firebase is synced
+  // 2. Load restaurant info
   restaurant = getRestaurant(restaurantId);
   
-  // Update sidebar brand with restaurant name
+  // 3. Update UI branding
   const sidebarBrand = document.querySelector('.sidebar-brand a');
   if (sidebarBrand && restaurant) {
     sidebarBrand.innerHTML = `
@@ -53,7 +56,23 @@ let restaurant = null;
     `;
   }
 
-  await seedData();
+  // 4. Safe seed: will only seed if cloud is empty
+  if (restaurant) {
+    await seedRestaurantDefaults(restaurantId, restaurant.name);
+  }
+
+  // 5. Start real-time listener for updates from other devices
+  subscribeToRestaurantData(restaurantId, (key) => {
+    console.log(`📡 Real-time update: ${key}`);
+    // Refresh the currently active segment
+    if (currentSection === 'dashboard') renderDashboard();
+    if (currentSection === 'menu') renderMenuSection();
+    if (currentSection === 'orders') renderOrders();
+    if (currentSection === 'settings') renderSettings();
+    
+    showToast({ title: 'Data Synced', message: `Cloud update received for ${key}`, type: 'info', duration: 2000 });
+  });
+
   renderDashboard();
 })();
 

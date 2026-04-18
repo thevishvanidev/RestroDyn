@@ -7,7 +7,7 @@ import { showToast } from './components/toast.js';
 import { seedData } from './data/seed-data.js';
 import { getCategories, getMenuItems, getSettings, getPaymentSettings, addOrder, getOrder, setStoreNamespace } from './data/store.js';
 import { getRestaurantBySlug, getAllRestaurants, getRestaurantTaxRate } from './data/platform-store.js';
-import { syncRestaurantData, syncPlatformData } from './data/firebase-store.js';
+import { syncRestaurantData, syncPlatformData, subscribeToRestaurantData } from './data/firebase-store.js';
 import { broadcast, EVENTS } from './data/broadcast.js';
 import { formatCurrency, getTagInfo, getStatusInfo, debounce, fuzzyMatch, elapsedMinutes, formatTime } from './utils/helpers.js';
 
@@ -70,7 +70,22 @@ async function initApp() {
   renderCategories();
   renderMenu();
 
-  // 4. Hide loader with a slight delay for smooth transition
+  // 4. Start real-time listener for menu/settings changes
+  if (currentRestaurant) {
+    subscribeToRestaurantData(currentRestaurant.id, (key) => {
+      if (key === 'items' || key === 'categories') {
+        renderCategories();
+        renderMenu();
+      } else if (key === 'settings') {
+        const newSettings = getSettings();
+        restaurantName.textContent = currentRestaurant.name || newSettings.restaurantName;
+        window._menuSettings = newSettings;
+        renderMenu();
+      }
+    });
+  }
+
+  // 5. Hide loader with a slight delay for smooth transition
   setTimeout(() => {
     const loader = document.getElementById('menu-loader');
     if (loader) {

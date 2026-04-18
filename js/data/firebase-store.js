@@ -11,6 +11,7 @@ import {
 const useFirebase = isFirebaseConfigured() && db !== null;
 let platformSyncPromise = null;
 let restaurantSyncPromises = {};
+let activeListeners = {}; // To prevent duplicate listeners
 
 // ═══════════════════════════════════════
 //  Local Cache Helpers (localStorage)
@@ -234,9 +235,6 @@ export async function syncPlatformData() {
   return platformSyncPromise;
 }
 
-/**
- * Sync a specific restaurant's data from Firestore to localStorage.
- */
 export async function syncRestaurantData(restaurantId) {
   if (!useFirebase) return;
   if (restaurantSyncPromises[restaurantId]) return restaurantSyncPromises[restaurantId];
@@ -255,6 +253,48 @@ export async function syncRestaurantData(restaurantId) {
   })();
 
   return restaurantSyncPromises[restaurantId];
+}
+
+/**
+ * Listen to real-time changes for a specific restaurant.
+ * @param {string} restaurantId 
+ * @param {Function} onUpdate Callback when data changes
+ */
+export function subscribeToRestaurantData(restaurantId, onUpdate) {
+  if (!useFirebase) return () => {};
+  
+  const prefix = `restrodyn_${restaurantId}_`;
+  const keys = ['categories', 'items', 'orders', 'settings', 'initialized', 'paymentSettings'];
+  const unsubscribers = [];
+
+  keys.forEach(key => {
+    const docRef = doc(db, 'restaurantData', `${restaurantId}_${key}`);
+    const cacheKey = `${prefix}${key}`;
+    
+    const unsub = onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        const remoteData = snap.data()?.value ?? snap.data();
+        const localData = localGet(cacheKey);
+
+        // Intelligent merge to prefer remote but avoid clobbering unsaved local data
+        const merged = mergeData(localData, remoteData, cacheKey);
+        
+        // Only update and notify if there's an actual change
+        if (JSON.stringify(merged) !== JSON.stringify(localData)) {
+          localSet(cacheKey, merged);
+          if (onUpdate) onUpdate(key, merged);
+        }
+      }
+    }, (err) => {
+      console.warn(`Real-time listen failed for ${key}:`, err);
+    });
+    
+    unsubscribers.push(unsub);
+  });
+
+  return () => {
+    unsubscribers.forEach(unsub => unsub());
+  };
 }
 
 /**

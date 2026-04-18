@@ -244,11 +244,15 @@ export async function seedData() {
   }
 }
 
-// Seed data for a specific restaurant (called during registration)
-export function seedRestaurantDefaults(restaurantId, restaurantName) {
+// Seed data for a specific restaurant (called during registration or first login)
+export async function seedRestaurantDefaults(restaurantId, restaurantName) {
+  // CRITICAL: Always wait for sync first so we don't overwrite cloud data with defaults
+  await syncRestaurantData(restaurantId);
+  
   setStoreNamespace(restaurantId);
+  
   if (!isInitialized()) {
-    // Start with a basic set of categories
+    // Start with a basic set of categories ONLY if the cloud has nothing
     saveCategories([
       { id: generateId(), name: 'Starters', icon: '🥗', order: 0 },
       { id: generateId(), name: 'Main Course', icon: '🍛', order: 1 },
