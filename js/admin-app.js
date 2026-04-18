@@ -30,21 +30,32 @@ const session = getSession();
 const restaurantId = getRestaurantId();
 setStoreNamespace(restaurantId);
 
-// Async init: sync Firebase data then seed
-(async () => {
-  await syncPlatformData();
-  await syncRestaurantData(restaurantId);
-  await seedData();
-  renderDashboard();
-})();
-
-// Load restaurant info
-const restaurant = getRestaurant(restaurantId);
-
 let currentSection = 'dashboard';
 let adminCategoryFilter = 'all';
 let orderStatusFilter = 'all';
 let editingItemId = null;
+let restaurant = null;
+
+// Async init: sync Firebase data then seed
+(async () => {
+  await syncPlatformData();
+  await syncRestaurantData(restaurantId);
+  
+  // Now load restaurant info safely since Firebase is synced
+  restaurant = getRestaurant(restaurantId);
+  
+  // Update sidebar brand with restaurant name
+  const sidebarBrand = document.querySelector('.sidebar-brand a');
+  if (sidebarBrand && restaurant) {
+    sidebarBrand.innerHTML = `
+      <span class="logo-icon">🍽️</span>
+      <span class="logo-text">${restaurant.name}</span>
+    `;
+  }
+
+  await seedData();
+  renderDashboard();
+})();
 
 // Theme toggles
 const themeSlot = document.getElementById('admin-theme-slot');
@@ -52,17 +63,6 @@ const mobileThemeSlot = document.getElementById('mobile-theme-slot');
 if (themeSlot) themeSlot.appendChild(createThemeToggle());
 if (mobileThemeSlot) mobileThemeSlot.appendChild(createThemeToggle());
 
-
-
-
-// Update sidebar brand with restaurant name
-const sidebarBrand = document.querySelector('.sidebar-brand a');
-if (sidebarBrand && restaurant) {
-  sidebarBrand.innerHTML = `
-    <span class="logo-icon">🍽️</span>
-    <span class="logo-text">${restaurant.name}</span>
-  `;
-}
 
 // ── Sidebar Navigation ──
 document.querySelectorAll('.sidebar-link').forEach(link => {
