@@ -45,7 +45,14 @@ setStoreNamespace(restaurantId);
   loadOrders();
 
   // Start real-time listener
+  const syncBadge = document.getElementById('kitchen-sync-badge');
+  
   subscribeToRestaurantData(restaurantId, (key, value) => {
+    if (syncBadge) {
+      syncBadge.className = 'badge badge-success badge-pulse';
+      syncBadge.innerHTML = '<span class="pulse-dot"></span> LIVE SYNC';
+    }
+
     if (key === 'orders') {
       const prevCount = orders.length;
       loadOrders();

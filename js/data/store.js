@@ -158,7 +158,12 @@ export function getOrdersByTable(tableNumber) {
 export function getTodayOrders() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  return getOrders().filter(o => o.createdAt >= today.getTime());
+  const todayMs = today.getTime();
+  const activeStatuses = ['new', 'accepted', 'preparing', 'ready'];
+
+  return getOrders().filter(o => 
+    o.createdAt >= todayMs || activeStatuses.includes(o.status)
+  );
 }
 
 function generateOrderNumber() {
