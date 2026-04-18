@@ -347,3 +347,44 @@ export function restaurantWrite(restaurantId, dataKey, cacheKey, value) {
 }
 
 export { useFirebase };
+
+/**
+ * High-speed sync for customers.
+ * Skips all platform administrative data and only fetches core menu data.
+ */
+export async function syncCustomerEssentials(slug) {
+  if (!useFirebase) return null;
+
+  try {
+    // 1. Fetch only the restaurants list to resolve the slug - FAST
+    const restSnap = await getDoc(doc(db, 'platform', 'restaurants'));
+    const allRestos = restSnap.exists() ? (restSnap.data()?.value ?? []) : [];
+    
+    // Identity-aware merge into local cache
+    const localRestos = localGet('restrodyn_platform_restaurants') || [];
+    const mergedRestos = mergeData(localRestos, allRestos, 'restrodyn_platform_restaurants');
+    localSet('restrodyn_platform_restaurants', mergedRestos);
+
+    const restaurant = mergedRestos.find(r => r.slug === slug);
+    if (!restaurant) return null;
+
+    // 2. Fetch only core menu data in one parallel batch
+    const restaurantId = restaurant.id;
+    const prefix = `restrodyn_${restaurantId}_`;
+    const coreKeys = ['settings', 'categories', 'items']; // ONLY what customers need
+
+    await preloadFirestoreData(
+      coreKeys.map(key => ({
+        collection: 'restaurantData',
+        docId: `${restaurantId}_${key}`,
+        cacheKey: `${prefix}${key}`,
+      }))
+    );
+
+    return restaurant;
+  } catch (e) {
+    console.warn('Customer essentials sync failed:', e);
+    return null;
+  }
+}
+
