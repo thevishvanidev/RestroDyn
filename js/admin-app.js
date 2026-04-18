@@ -592,9 +592,14 @@ document.getElementById('generate-qr-btn').addEventListener('click', async () =>
   try {
     const QRCode = (await import('qrcode')).default;
     const baseUrl = window.location.origin;
-    const slug = restaurant?.slug || 'demo';
+    
+    // Ensure we have the latest restaurant data
+    const activeRestaurantId = getRestaurantId();
+    const activeResto = getRestaurant(activeRestaurantId);
     const settings = getSettings();
-    const restaurantName = settings.restaurantName || restaurant?.name || 'RestroDyn';
+    
+    const slug = activeResto?.slug || restaurant?.slug || 'demo';
+    const restaurantName = activeResto?.name || settings.restaurantName || restaurant?.name || 'RestroDyn';
 
     let html = '';
     for (let i = 1; i <= count; i++) {
