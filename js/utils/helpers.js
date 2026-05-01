@@ -92,3 +92,39 @@ export function fuzzyMatch(text, query) {
   const q = query.toLowerCase();
   return lower.includes(q);
 }
+
+export function playAlertSound() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    
+    // First beep
+    let osc1 = ctx.createOscillator();
+    let gain1 = ctx.createGain();
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.type = 'sine';
+    osc1.frequency.value = 880; 
+    gain1.gain.setValueAtTime(0, ctx.currentTime);
+    gain1.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
+    gain1.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.2);
+    osc1.start(ctx.currentTime);
+    osc1.stop(ctx.currentTime + 0.2);
+    
+    // Second beep
+    let osc2 = ctx.createOscillator();
+    let gain2 = ctx.createGain();
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.type = 'sine';
+    osc2.frequency.value = 1046.50; // C6
+    gain2.gain.setValueAtTime(0, ctx.currentTime + 0.3);
+    gain2.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.35);
+    gain2.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.6);
+    osc2.start(ctx.currentTime + 0.3);
+    osc2.stop(ctx.currentTime + 0.6);
+  } catch(e) { 
+    console.warn('Audio play failed', e); 
+  }
+}

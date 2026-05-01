@@ -17,7 +17,7 @@ import { getSession, requireAuth, getRestaurantId, getRestaurantSlug, getSubscri
 import { syncRestaurantData, syncPlatformData, subscribeToRestaurantData } from './data/firebase-store.js';
 import { seedRestaurantDefaults } from './data/seed-data.js';
 import { broadcast, EVENTS } from './data/broadcast.js';
-import { formatCurrency, formatTime, getStatusInfo, timeAgo, formatDate, generateId } from './utils/helpers.js';
+import { formatCurrency, formatTime, getStatusInfo, timeAgo, formatDate, generateId, playAlertSound } from './utils/helpers.js';
 
 // Init
 initTheme();
@@ -130,6 +130,10 @@ renderDashboard();
         const waiterAlert = document.getElementById('waiter-alert');
         const waiterAlertText = document.getElementById('waiter-alert-text');
         if (waiterAlert && waiterAlertText) {
+          // Check if it's already active to prevent playing sound repeatedly for the same alert
+          if (!waiterAlert.classList.contains('active')) {
+            playAlertSound();
+          }
           waiterAlertText.textContent = `🛎️ Table ${lastAlert.tableNumber} needs assistance!`;
           waiterAlert.dataset.alertId = lastAlert.id;
           waiterAlert.classList.add('active');

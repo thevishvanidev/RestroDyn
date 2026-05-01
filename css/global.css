@@ -718,3 +718,38 @@ select.input {
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
+
+/* ── Waiter Alert ── */
+.waiter-alert {
+  position: fixed;
+  bottom: var(--space-xl);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--primary-500);
+  animation: bounce-in 0.5s ease, glow-pulse 2s infinite;
+  z-index: var(--z-toast);
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-xl);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.waiter-alert.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.waiter-alert-icon {
+  font-size: 1.5rem;
+  animation: float 1s ease-in-out infinite;
+}
+
+.waiter-alert-text {
+  font-weight: 600;
+}

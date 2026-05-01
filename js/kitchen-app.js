@@ -9,7 +9,7 @@ import { getSession, requireAuth, getRestaurantId } from './data/auth.js';
 import { getRestaurant, getAllRestaurants } from './data/platform-store.js';
 import { syncRestaurantData, syncPlatformData, subscribeToRestaurantData } from './data/firebase-store.js';
 import { broadcast, EVENTS } from './data/broadcast.js';
-import { formatTime, elapsedMinutes } from './utils/helpers.js';
+import { formatTime, elapsedMinutes, playAlertSound } from './utils/helpers.js';
 
 // Init
 initTheme();
@@ -66,24 +66,23 @@ setStoreNamespace(restaurantId);
       const prevCount = orders.length;
       loadOrders();
       if (orders.length > prevCount) {
-        playNotificationSound();
+        playAlertSound();
         showToast({ title: 'New Order Received', message: 'A new order has arrived!', type: 'success' });
       }
     } else if (key === 'waiterAlerts') {
       const lastAlert = value[value.length - 1];
       if (lastAlert && lastAlert.status === 'new' && Date.now() - lastAlert.time < 30000) {
+        if (!waiterAlert.classList.contains('active')) {
+          playAlertSound();
+        }
         waiterAlertText.textContent = `🛎️ Table ${lastAlert.tableNumber} needs assistance!`;
         waiterAlert.dataset.alertId = lastAlert.id;
-        waiterAlert.style.display = 'flex';
         waiterAlert.classList.add('active');
-        playNotificationSound();
         setTimeout(() => {
           waiterAlert.classList.remove('active');
-          waiterAlert.style.display = 'none';
         }, 15000);
       } else if (lastAlert && lastAlert.status === 'dismissed') {
         waiterAlert.classList.remove('active');
-        waiterAlert.style.display = 'none';
       }
     }
   });
@@ -136,29 +135,6 @@ soundToggle.addEventListener('click', () => {
 });
 
 // Play notification sound
-function playNotificationSound() {
-  if (!soundEnabled) return;
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    
-    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.15);
-      osc.type = 'sine';
-      gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.15);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.5);
-      osc.start(ctx.currentTime + i * 0.15);
-      osc.stop(ctx.currentTime + i * 0.15 + 0.5);
-    });
-  } catch (e) {
-    console.log('Audio not available');
-  }
-}
-
 // ── Render Orders ──
 function loadOrders() {
   orders = getTodayOrders();
@@ -286,8 +262,7 @@ broadcast.on(EVENTS.NEW_ORDER, (order) => {
 
 // ── Waiter Call (broadcast - same tab/device) ──
 broadcast.on(EVENTS.CALL_WAITER, (payload) => {
-  playNotificationSound();
-  waiterAlert.style.display = 'flex';
+  playAlertSound();
   waiterAlert.classList.add('active');
   waiterAlertText.textContent = `Table ${payload.tableNumber} is calling!`;
   showToast({
