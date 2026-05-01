@@ -168,9 +168,17 @@ export function initHeroScene(canvas) {
 
   // ── Animation Loop ──
   const clock = new THREE.Clock();
+  let isVisible = true;
+
+  const observer = new IntersectionObserver((entries) => {
+    isVisible = entries[0].isIntersecting;
+  }, { threshold: 0.1 });
+  observer.observe(canvas);
 
   function animate() {
     requestAnimationFrame(animate);
+    if (!isVisible) return;
+
     const t = clock.getElapsedTime();
 
     // Rotate and float shapes

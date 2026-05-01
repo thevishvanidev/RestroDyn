@@ -6,10 +6,14 @@ import { restaurantWrite, syncRestaurantData } from './firebase-store.js';
 import { generateId } from '../utils/helpers.js';
 
 let _restaurantId = null;
+const memoryCache = new Map();
 
 // Set the active restaurant context — all operations will be namespaced under this ID
 export function setStoreNamespace(restaurantId) {
-  _restaurantId = restaurantId;
+  if (_restaurantId !== restaurantId) {
+    _restaurantId = restaurantId;
+    memoryCache.clear(); // Clear cache when switching restaurant context
+  }
 }
 
 export function getStoreNamespace() {
@@ -25,16 +29,26 @@ function getKey(baseKey) {
 }
 
 function get(key) {
+  if (memoryCache.has(key)) {
+    return memoryCache.get(key);
+  }
   try {
     const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : null;
+    const parsed = data ? JSON.parse(data) : null;
+    memoryCache.set(key, parsed);
+    return parsed;
   } catch {
     return null;
   }
 }
 
 function set(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
+  memoryCache.set(key, value);
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.warn('localStorage write failed:', e);
+  }
 }
 
 // Firebase-aware write: writes to both localStorage and Firestore

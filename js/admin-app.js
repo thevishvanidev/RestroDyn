@@ -267,7 +267,17 @@ function renderDashboard() {
   renderCharts(todayOrders);
 }
 
-function renderCharts(orders) {
+let ChartJS = null;
+
+async function getChartJS() {
+  if (!ChartJS) {
+    const module = await import('chart.js/auto');
+    ChartJS = module.default;
+  }
+  return ChartJS;
+}
+
+async function renderCharts(orders) {
   const itemCounts = {};
   orders.forEach(o => {
     (o.items || []).forEach(item => {
@@ -279,9 +289,29 @@ function renderCharts(orders) {
   const labels = sorted.map(([name]) => name);
   const data = sorted.map(([, count]) => count);
 
+  // Hour-based orders
+  const hourCounts = new Array(24).fill(0);
+  orders.forEach(o => {
+    const hour = new Date(o.createdAt).getHours();
+    hourCounts[hour]++;
+  });
+  
+  const currentHour = new Date().getHours();
+  const hourLabels = [];
+  const hourData = [];
+  for (let i = currentHour - 11; i <= currentHour; i++) {
+    const h = (i + 24) % 24;
+    hourLabels.push(`${h}:00`);
+    hourData.push(hourCounts[h]);
+  }
+
+  const textColor = getComputedStyle(document.body).getPropertyValue('--text-secondary');
+  const gridColor = getComputedStyle(document.body).getPropertyValue('--border-color');
+
   try {
-    import('chart.js/auto').then(({ default: Chart }) => {
-      const popularCtx = document.getElementById('popular-chart');
+    const Chart = await getChartJS();
+    const popularCtx = document.getElementById('popular-chart');
+    if (popularCtx) {
       if (popularCtx._chart) {
         popularCtx._chart.data.labels = labels.length ? labels : ['No data'];
         popularCtx._chart.data.datasets[0].data = data.length ? data : [0];
@@ -317,8 +347,10 @@ function renderCharts(orders) {
         });
         popularCtx._chart = chart1;
       }
+    }
 
-      const ordersCtx = document.getElementById('orders-chart');
+    const ordersCtx = document.getElementById('orders-chart');
+    if (ordersCtx) {
       if (ordersCtx._chart) {
         ordersCtx._chart.data.labels = hourLabels;
         ordersCtx._chart.data.datasets[0].data = hourData;
@@ -350,7 +382,7 @@ function renderCharts(orders) {
         });
         ordersCtx._chart = chart2;
       }
-    });
+    }
   } catch (e) {
     console.error('Chart.js error:', e);
   }
@@ -384,9 +416,10 @@ function renderMenuSection() {
 
   const gridHtml = filtered.map(item => {
     const cat = categories.find(c => c.id === item.categoryId);
+    const imgSrc = item.image || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
     return `
       <div class="admin-menu-card">
-        <div class="admin-menu-card-img" ${item.image ? `style="background-image:url('${item.image}')"` : ''}></div>
+        <img class="admin-menu-card-img" src="${imgSrc}" loading="lazy" alt="${item.name}" />
         <div class="admin-menu-card-info">
           <div class="admin-menu-card-name">
             <span>${item.name}</span>

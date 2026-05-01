@@ -186,14 +186,25 @@ function renderDashboard() {
   renderDashboardCharts(stats);
 }
 
-function renderDashboardCharts(stats) {
-  try {
-    import('chart.js/auto').then(({ default: Chart }) => {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      const textColor = isDark ? '#A0A0C0' : '#4A4A68';
+let ChartJS = null;
 
-      // Subscription distribution
-      const subCtx = document.getElementById('sa-sub-chart');
+async function getChartJS() {
+  if (!ChartJS) {
+    const module = await import('chart.js/auto');
+    ChartJS = module.default;
+  }
+  return ChartJS;
+}
+
+async function renderDashboardCharts(stats) {
+  try {
+    const Chart = await getChartJS();
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const textColor = isDark ? '#A0A0C0' : '#4A4A68';
+
+    // Subscription distribution
+    const subCtx = document.getElementById('sa-sub-chart');
+    if (subCtx) {
       if (subCtx._chart) subCtx._chart.destroy();
 
       const chart1 = new Chart(subCtx, {
@@ -222,9 +233,11 @@ function renderDashboardCharts(stats) {
         },
       });
       subCtx._chart = chart1;
+    }
 
-      // Growth chart (simulate)
-      const growthCtx = document.getElementById('sa-growth-chart');
+    // Growth chart (simulate)
+    const growthCtx = document.getElementById('sa-growth-chart');
+    if (growthCtx) {
       if (growthCtx._chart) growthCtx._chart.destroy();
 
       const restaurants = getAllRestaurants();
@@ -261,7 +274,7 @@ function renderDashboardCharts(stats) {
         },
       });
       growthCtx._chart = chart2;
-    });
+    }
   } catch (e) {
     console.log('Charts not available:', e);
   }
@@ -567,7 +580,7 @@ function renderPendingPayments() {
       ${p.proofImage ? `
         <div class="pm-verify-proof">
           <p class="pm-verify-proof-label">📸 Payment Proof</p>
-          <img src="${p.proofImage}" alt="Payment proof" class="pm-proof-img" />
+          <img src="${p.proofImage}" alt="Payment proof" class="pm-proof-img" loading="lazy" />
         </div>
       ` : ''}
       <div class="pm-verify-actions">

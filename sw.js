@@ -38,28 +38,48 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch — network first, fallback to cache
+// Fetch — Stale-while-revalidate for static assets
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Cache successful responses
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, clone);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        // Fallback to cache
-        return caches.match(event.request).then((cached) => {
-          return cached || new Response('Offline', { status: 503 });
+  const url = new URL(event.request.url);
+  
+  // For static assets (CSS, JS, Fonts, Images)
+  const isStaticAsset = ASSETS_TO_CACHE.includes(url.pathname) || 
+                        url.pathname.startsWith('/css/') || 
+                        url.pathname.startsWith('/js/') || 
+                        url.pathname.startsWith('/assets/') ||
+                        url.hostname.includes('fonts.googleapis.com') ||
+                        url.hostname.includes('fonts.gstatic.com');
+
+  if (isStaticAsset) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        const fetchPromise = fetch(event.request).then((networkResponse) => {
+          if (networkResponse.ok) {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, networkResponse.clone());
+            });
+          }
+          return networkResponse;
         });
+        return cachedResponse || fetchPromise;
       })
-  );
+    );
+  } else {
+    // For other requests (like dynamic data/API), use Network First
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, clone);
+            });
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || new Response('Offline', { status: 503 })))
+    );
+  }
 });

@@ -311,11 +311,11 @@ function renderItemCard(item, currency) {
     return `<span class="menu-item-tag" style="background:${info.color}20;color:${info.color}">${info.emoji} ${info.label}</span>`;
   }).join('');
 
-  const imgStyle = item.image ? `style="background-image:url('${item.image}');background-size:cover;background-position:center"` : '';
+  const imgSrc = item.image || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; // Placeholder
 
   return `
     <div class="menu-item-card ${item.available ? '' : 'unavailable'}" data-id="${item.id}">
-      <div class="menu-item-image" ${imgStyle}></div>
+      <img class="menu-item-image" src="${imgSrc}" loading="lazy" alt="${item.name}" />
       <div class="menu-item-info">
         <div class="menu-item-name">${item.name}</div>
         <div class="menu-item-desc">${item.description}</div>

@@ -146,24 +146,31 @@ function renderBoard() {
   const preparingOrders = orders.filter(o => o.status === 'preparing');
   const readyOrders = orders.filter(o => o.status === 'ready');
 
-  statNew.textContent = newOrders.length;
-  statPreparing.textContent = preparingOrders.length;
-  statReady.textContent = readyOrders.length;
-  colNewCount.textContent = newOrders.length;
-  colPreparingCount.textContent = preparingOrders.length;
-  colReadyCount.textContent = readyOrders.length;
+  // Update counts only if changed
+  if (statNew.textContent != newOrders.length) statNew.textContent = newOrders.length;
+  if (statPreparing.textContent != preparingOrders.length) statPreparing.textContent = preparingOrders.length;
+  if (statReady.textContent != readyOrders.length) statReady.textContent = readyOrders.length;
+  
+  if (colNewCount.textContent != newOrders.length) colNewCount.textContent = newOrders.length;
+  if (colPreparingCount.textContent != preparingOrders.length) colPreparingCount.textContent = preparingOrders.length;
+  if (colReadyCount.textContent != readyOrders.length) colReadyCount.textContent = readyOrders.length;
 
-  colNewBody.innerHTML = newOrders.length
+  const newHtml = newOrders.length
     ? newOrders.map(o => renderOrderCard(o, 'new')).join('')
     : '<div class="column-empty"><div class="column-empty-icon">✅</div><p>No new orders</p></div>';
 
-  colPreparingBody.innerHTML = preparingOrders.length
+  const preparingHtml = preparingOrders.length
     ? preparingOrders.map(o => renderOrderCard(o, 'preparing')).join('')
     : '<div class="column-empty"><div class="column-empty-icon">🍳</div><p>Nothing cooking</p></div>';
 
-  colReadyBody.innerHTML = readyOrders.length
+  const readyHtml = readyOrders.length
     ? readyOrders.map(o => renderOrderCard(o, 'ready')).join('')
     : '<div class="column-empty"><div class="column-empty-icon">🔔</div><p>No ready orders</p></div>';
+
+  // Only update DOM if HTML changed (prevents flickering and redundant layout)
+  if (colNewBody.innerHTML !== newHtml) colNewBody.innerHTML = newHtml;
+  if (colPreparingBody.innerHTML !== preparingHtml) colPreparingBody.innerHTML = preparingHtml;
+  if (colReadyBody.innerHTML !== readyHtml) colReadyBody.innerHTML = readyHtml;
 
   document.querySelectorAll('.order-action-btn').forEach(btn => {
     btn.addEventListener('click', () => {

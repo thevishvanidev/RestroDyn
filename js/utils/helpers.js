@@ -93,11 +93,22 @@ export function fuzzyMatch(text, query) {
   return lower.includes(q);
 }
 
+let cachedAudioContext = null;
+
 export function playAlertSound() {
   try {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return;
-    const ctx = new AudioContext();
+    
+    if (!cachedAudioContext) {
+      cachedAudioContext = new AudioContext();
+    }
+    const ctx = cachedAudioContext;
+    
+    // Ensure context is running (required for many browsers after user interaction)
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
     
     // First beep
     let osc1 = ctx.createOscillator();
