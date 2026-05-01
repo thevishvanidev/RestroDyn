@@ -6,7 +6,7 @@ import { showToast } from './components/toast.js';
 import { seedData } from './data/seed-data.js';
 import { getOrders, updateOrderStatus, getTodayOrders, setStoreNamespace, dismissWaiterAlert } from './data/store.js';
 import { getSession, requireAuth, getRestaurantId } from './data/auth.js';
-import { getRestaurant } from './data/platform-store.js';
+import { getRestaurant, getAllRestaurants } from './data/platform-store.js';
 import { syncRestaurantData, syncPlatformData, subscribeToRestaurantData } from './data/firebase-store.js';
 import { broadcast, EVENTS } from './data/broadcast.js';
 import { formatTime, elapsedMinutes } from './utils/helpers.js';
@@ -49,6 +49,8 @@ setStoreNamespace(restaurantId);
 
   await syncRestaurantData(restaurantId);
   await seedData();
+  // CRITICAL: Re-set namespace after seedData() which resets it to null
+  setStoreNamespace(restaurantId);
   loadOrders();
 
   // Start real-time listener
@@ -72,11 +74,16 @@ setStoreNamespace(restaurantId);
       if (lastAlert && lastAlert.status === 'new' && Date.now() - lastAlert.time < 30000) {
         waiterAlertText.textContent = `🛎️ Table ${lastAlert.tableNumber} needs assistance!`;
         waiterAlert.dataset.alertId = lastAlert.id;
+        waiterAlert.style.display = 'flex';
         waiterAlert.classList.add('active');
         playNotificationSound();
-        setTimeout(() => waiterAlert.classList.remove('active'), 15000);
+        setTimeout(() => {
+          waiterAlert.classList.remove('active');
+          waiterAlert.style.display = 'none';
+        }, 15000);
       } else if (lastAlert && lastAlert.status === 'dismissed') {
         waiterAlert.classList.remove('active');
+        waiterAlert.style.display = 'none';
       }
     }
   });
@@ -277,10 +284,11 @@ broadcast.on(EVENTS.NEW_ORDER, (order) => {
   }, 100);
 });
 
-// ── Waiter Call ──
+// ── Waiter Call (broadcast - same tab/device) ──
 broadcast.on(EVENTS.CALL_WAITER, (payload) => {
   playNotificationSound();
   waiterAlert.style.display = 'flex';
+  waiterAlert.classList.add('active');
   waiterAlertText.textContent = `Table ${payload.tableNumber} is calling!`;
   showToast({
     title: '🔔 Waiter Called',
@@ -290,9 +298,7 @@ broadcast.on(EVENTS.CALL_WAITER, (payload) => {
   });
 });
 
-document.getElementById('waiter-dismiss').addEventListener('click', () => {
-  waiterAlert.style.display = 'none';
-});
+// Note: waiter-dismiss handler already registered at line 86 via optional chaining
 
 // ── Timer auto-update ──
 setInterval(() => {

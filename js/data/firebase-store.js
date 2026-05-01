@@ -309,6 +309,11 @@ export function subscribeToRestaurantData(restaurantId, onUpdate) {
           localSet(cacheKey, merged);
           if (onUpdate) onUpdate(key, merged);
         }
+
+        // If local data exists that isn't in remote, push it up (Merge back-sync)
+        if (JSON.stringify(merged) !== JSON.stringify(remoteData)) {
+          setDoc(docRef, { value: merged, updatedAt: Date.now() }, { merge: true }).catch(console.warn);
+        }
       }
     }, (err) => {
       console.warn(`Real-time listen failed for ${key}:`, err);
@@ -371,7 +376,7 @@ export async function syncCustomerEssentials(slug) {
     // 2. Fetch only core menu data in one parallel batch
     const restaurantId = restaurant.id;
     const prefix = `restrodyn_${restaurantId}_`;
-    const coreKeys = ['settings', 'categories', 'items']; // ONLY what customers need
+    const coreKeys = ['settings', 'categories', 'items', 'orders']; // ONLY what customers need (orders needed to avoid overwrite)
 
     await preloadFirestoreData(
       coreKeys.map(key => ({

@@ -3,7 +3,7 @@
 // Now namespace-aware: data is seeded under the active restaurant context
 // Firebase-aware: syncs platform data from Firestore on startup
 
-import { saveCategories, saveMenuItems, getSettings, saveSettings, markInitialized, isInitialized, setStoreNamespace } from './store.js';
+import { saveCategories, saveMenuItems, getSettings, saveSettings, markInitialized, isInitialized, setStoreNamespace, getStoreNamespace } from './store.js';
 import { initializePlatform, getAllRestaurants, syncPlatformData } from './platform-store.js';
 import { syncRestaurantData } from './firebase-store.js';
 import { generateId } from '../utils/helpers.js';
@@ -221,6 +221,7 @@ export async function seedData() {
   const restaurants = getAllRestaurants();
   const demoRestaurant = restaurants.find(r => r.email === 'demo@restrodyn.app');
   if (demoRestaurant) {
+    const prevNamespace = getStoreNamespace();
     // Sync demo restaurant's data from Firebase
     await syncRestaurantData(demoRestaurant.id);
 
@@ -240,12 +241,13 @@ export async function seedData() {
       console.log('🍽️ RestroDyn: Demo restaurant data seeded');
     }
     // Reset namespace
-    setStoreNamespace(null);
+    setStoreNamespace(prevNamespace);
   }
 }
 
 // Seed data for a specific restaurant (called during registration or first login)
 export async function seedRestaurantDefaults(restaurantId, restaurantName) {
+  const prevNamespace = getStoreNamespace();
   // CRITICAL: Always wait for sync first so we don't overwrite cloud data with defaults
   await syncRestaurantData(restaurantId);
   
@@ -269,5 +271,5 @@ export async function seedRestaurantDefaults(restaurantId, restaurantName) {
     });
     markInitialized();
   }
-  setStoreNamespace(null);
+  setStoreNamespace(prevNamespace);
 }

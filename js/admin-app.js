@@ -9,9 +9,10 @@ import {
   getCategories, addCategory, getMenuItems, getSettings, saveSettings,
   addMenuItem, updateMenuItem, deleteMenuItem,
   getOrders, getTodayOrders, updateOrderStatus, resetAll,
-  setStoreNamespace, getPaymentSettings, savePaymentSettings
+  setStoreNamespace, getPaymentSettings, savePaymentSettings,
+  dismissWaiterAlert
 } from './data/store.js';
-import { getRestaurant, getPlatformConfig, submitPayment, getPaymentsByRestaurant } from './data/platform-store.js';
+import { getRestaurant, getAllRestaurants, getPlatformConfig, submitPayment, getPaymentsByRestaurant } from './data/platform-store.js';
 import { getSession, requireAuth, getRestaurantId, getRestaurantSlug, getSubscriptionStatus, logout } from './data/auth.js';
 import { syncRestaurantData, syncPlatformData, subscribeToRestaurantData } from './data/firebase-store.js';
 import { seedRestaurantDefaults } from './data/seed-data.js';
@@ -104,10 +105,12 @@ let restaurant = null;
   // 4. Safe seed: will only seed if cloud is empty
   if (restaurant) {
     await seedRestaurantDefaults(restaurantId, restaurant.name);
+    // CRITICAL: Re-set namespace after seedRestaurantDefaults() which resets it to null
+    setStoreNamespace(restaurantId);
   }
 
   // 5. Start real-time listener for updates from other devices
-  subscribeToRestaurantData(restaurantId, (key) => {
+  subscribeToRestaurantData(restaurantId, (key, value) => {
     console.log(`📡 Real-time update: ${key}`);
     // Refresh the currently active segment
     if (currentSection === 'dashboard') renderDashboard();
