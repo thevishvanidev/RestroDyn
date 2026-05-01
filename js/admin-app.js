@@ -38,6 +38,10 @@ let orderStatusFilter = 'all';
 let editingItemId = null;
 let restaurant = null;
 
+// Optimistic initial render using locally cached data (SUPER FAST)
+// This prevents the blank screen while waiting for the cloud sync
+renderDashboard();
+
 // Async init: sync Firebase data then seed
 (async () => {
   await syncPlatformData();

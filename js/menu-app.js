@@ -107,9 +107,15 @@ async function initApp() {
           const updatedOrder = value.find(o => o.id === currentOrderId);
           if (updatedOrder) {
             updateTrackerTimeline(updatedOrder.status);
-            // Optionally show toast if status changed
-            const info = getStatusInfo(updatedOrder.status);
-            showToast({ title: `Order ${info.label}`, message: info.icon, type: 'info' });
+            
+            // Only show toast if status actually changed and it's not the initial 'new' state
+            if (lastKnownOrderStatus !== updatedOrder.status) {
+              if (lastKnownOrderStatus !== null && updatedOrder.status !== 'new') {
+                const info = getStatusInfo(updatedOrder.status);
+                showToast({ title: `Order ${info.label}`, message: info.icon, type: 'info' });
+              }
+              lastKnownOrderStatus = updatedOrder.status;
+            }
           }
         }
       }
@@ -150,6 +156,7 @@ let activeCategory = 'all';
 let activeFilter = 'all';
 let searchQuery = '';
 let currentOrderId = null;
+let lastKnownOrderStatus = null;
 let selectedPaymentMethod = 'cash'; // 'cash' or 'upi'
 let tipAmount = 0;
 
