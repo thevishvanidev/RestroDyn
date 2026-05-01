@@ -240,8 +240,10 @@ export async function seedData() {
       markInitialized();
       console.log('🍽️ RestroDyn: Demo restaurant data seeded');
     }
-    // Reset namespace
-    setStoreNamespace(prevNamespace);
+    // Reset namespace ONLY if it was previously set
+    if (prevNamespace) {
+      setStoreNamespace(prevNamespace);
+    }
   }
 }
 
@@ -271,5 +273,9 @@ export async function seedRestaurantDefaults(restaurantId, restaurantName) {
     });
     markInitialized();
   }
-  setStoreNamespace(prevNamespace);
+  
+  // Reset namespace ONLY if it was previously set
+  if (prevNamespace) {
+    setStoreNamespace(prevNamespace);
+  }
 }
