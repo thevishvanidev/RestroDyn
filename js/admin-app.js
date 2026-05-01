@@ -124,8 +124,6 @@ renderDashboard();
     if (currentSection === 'orders') renderOrders();
     if (currentSection === 'settings') renderSettings();
     
-    showToast({ title: 'Data Synced', message: `Cloud update received for ${key}`, type: 'info', duration: 2000 });
-
     if (key === 'waiterAlerts') {
       const lastAlert = value[value.length - 1];
       if (lastAlert && lastAlert.status === 'new' && Date.now() - lastAlert.time < 30000) {
@@ -227,30 +225,39 @@ function renderDashboard() {
   const avgOrderValue = todayOrders.length ? Math.round(totalRevenue / todayOrders.length) : 0;
   const pendingOrders = todayOrders.filter(o => ['new', 'accepted', 'preparing'].includes(o.status)).length;
 
-  const cardsHtml = `
-    <div class="analytics-card">
-      <div class="analytics-card-icon">💰</div>
-      <div class="analytics-card-value">${formatCurrency(totalRevenue, currency)}</div>
-      <div class="analytics-card-label">Today's Revenue</div>
-    </div>
-    <div class="analytics-card">
-      <div class="analytics-card-icon">📋</div>
-      <div class="analytics-card-value">${todayOrders.length}</div>
-      <div class="analytics-card-label">Total Orders</div>
-    </div>
-    <div class="analytics-card">
-      <div class="analytics-card-icon">📊</div>
-      <div class="analytics-card-value">${formatCurrency(avgOrderValue, currency)}</div>
-      <div class="analytics-card-label">Avg. Order Value</div>
-    </div>
-    <div class="analytics-card">
-      <div class="analytics-card-icon">⏳</div>
-      <div class="analytics-card-value">${pendingOrders}</div>
-      <div class="analytics-card-label">Pending Orders</div>
-    </div>
-  `;
-
-  document.getElementById('analytics-cards').innerHTML = cardsHtml;
+  const container = document.getElementById('analytics-cards');
+  
+  if (container.children.length === 0) {
+    const cardsHtml = `
+      <div class="analytics-card">
+        <div class="analytics-card-icon">💰</div>
+        <div class="analytics-card-value" id="dash-val-rev">${formatCurrency(totalRevenue, currency)}</div>
+        <div class="analytics-card-label">Today's Revenue</div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-card-icon">📋</div>
+        <div class="analytics-card-value" id="dash-val-ord">${todayOrders.length}</div>
+        <div class="analytics-card-label">Total Orders</div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-card-icon">📊</div>
+        <div class="analytics-card-value" id="dash-val-avg">${formatCurrency(avgOrderValue, currency)}</div>
+        <div class="analytics-card-label">Avg. Order Value</div>
+      </div>
+      <div class="analytics-card">
+        <div class="analytics-card-icon">⏳</div>
+        <div class="analytics-card-value" id="dash-val-pend">${pendingOrders}</div>
+        <div class="analytics-card-label">Pending Orders</div>
+      </div>
+    `;
+    container.innerHTML = cardsHtml;
+  } else {
+    // Seamless update without re-triggering CSS animations
+    document.getElementById('dash-val-rev').textContent = formatCurrency(totalRevenue, currency);
+    document.getElementById('dash-val-ord').textContent = todayOrders.length;
+    document.getElementById('dash-val-avg').textContent = formatCurrency(avgOrderValue, currency);
+    document.getElementById('dash-val-pend').textContent = pendingOrders;
+  }
 
   // Render charts
   renderCharts(todayOrders);
@@ -271,80 +278,74 @@ function renderCharts(orders) {
   try {
     import('chart.js/auto').then(({ default: Chart }) => {
       const popularCtx = document.getElementById('popular-chart');
-      if (popularCtx._chart) popularCtx._chart.destroy();
-      
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      const textColor = isDark ? '#A0A0C0' : '#4A4A68';
-      const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-
-      const chart1 = new Chart(popularCtx, {
-        type: 'bar',
-        data: {
-          labels: labels.length ? labels : ['No data'],
-          datasets: [{
-            label: 'Ordered',
-            data: data.length ? data : [0],
-            backgroundColor: [
-              'rgba(255, 193, 7, 0.7)',
-              'rgba(255, 107, 107, 0.7)',
-              'rgba(124, 77, 255, 0.7)',
-              'rgba(0, 188, 212, 0.7)',
-              'rgba(76, 175, 80, 0.7)',
-              'rgba(255, 152, 0, 0.7)',
-            ],
-            borderRadius: 8,
-            borderSkipped: false,
-          }],
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { ticks: { color: textColor }, grid: { display: false } },
-            y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } },
+      if (popularCtx._chart) {
+        popularCtx._chart.data.labels = labels.length ? labels : ['No data'];
+        popularCtx._chart.data.datasets[0].data = data.length ? data : [0];
+        popularCtx._chart.update();
+      } else {
+        const chart1 = new Chart(popularCtx, {
+          type: 'bar',
+          data: {
+            labels: labels.length ? labels : ['No data'],
+            datasets: [{
+              label: 'Ordered',
+              data: data.length ? data : [0],
+              backgroundColor: [
+                'rgba(255, 193, 7, 0.7)',
+                'rgba(255, 107, 107, 0.7)',
+                'rgba(124, 77, 255, 0.7)',
+                'rgba(0, 188, 212, 0.7)',
+                'rgba(76, 175, 80, 0.7)',
+                'rgba(255, 152, 0, 0.7)',
+              ],
+              borderRadius: 8,
+              borderSkipped: false,
+            }],
           },
-        },
-      });
-      popularCtx._chart = chart1;
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { color: textColor }, grid: { display: false } },
+              y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } },
+            },
+          },
+        });
+        popularCtx._chart = chart1;
+      }
 
       const ordersCtx = document.getElementById('orders-chart');
-      if (ordersCtx._chart) ordersCtx._chart.destroy();
-
-      const hourly = {};
-      orders.forEach(o => {
-        const hour = new Date(o.createdAt).getHours();
-        hourly[hour] = (hourly[hour] || 0) + 1;
-      });
-
-      const hours = Array.from({ length: 24 }, (_, i) => i);
-      const hourLabels = hours.map(h => `${h}:00`);
-      const hourData = hours.map(h => hourly[h] || 0);
-
-      const chart2 = new Chart(ordersCtx, {
-        type: 'line',
-        data: {
-          labels: hourLabels,
-          datasets: [{
-            label: 'Orders',
-            data: hourData,
-            borderColor: 'rgba(255, 193, 7, 0.8)',
-            backgroundColor: 'rgba(255, 193, 7, 0.1)',
-            fill: true,
-            tension: 0.4,
-            pointRadius: 3,
-            pointBackgroundColor: '#FFC107',
-          }],
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { ticks: { color: textColor, maxTicksLimit: 12 }, grid: { display: false } },
-            y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } },
+      if (ordersCtx._chart) {
+        ordersCtx._chart.data.labels = hourLabels;
+        ordersCtx._chart.data.datasets[0].data = hourData;
+        ordersCtx._chart.update();
+      } else {
+        const chart2 = new Chart(ordersCtx, {
+          type: 'line',
+          data: {
+            labels: hourLabels,
+            datasets: [{
+              label: 'Orders',
+              data: hourData,
+              borderColor: 'rgba(255, 193, 7, 0.8)',
+              backgroundColor: 'rgba(255, 193, 7, 0.1)',
+              fill: true,
+              tension: 0.4,
+              pointRadius: 3,
+              pointBackgroundColor: '#FFC107',
+            }],
           },
-        },
-      });
-      ordersCtx._chart = chart2;
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { color: textColor, maxTicksLimit: 12 }, grid: { display: false } },
+              y: { ticks: { color: textColor, stepSize: 1 }, grid: { color: gridColor } },
+            },
+          },
+        });
+        ordersCtx._chart = chart2;
+      }
     });
   } catch (e) {
     console.error('Chart.js error:', e);
