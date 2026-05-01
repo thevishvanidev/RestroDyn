@@ -60,10 +60,10 @@ let restaurant = null;
   const idAction = document.getElementById('identity-action');
   
   if (idStatus && idDisplay) {
-    idStatus.style.display = 'block';
     idDisplay.textContent = `ID: ${restaurantId}`;
     
     if (userRestos.length > 1 && masterResto.id !== restaurantId) {
+       idStatus.style.display = 'block';
        idStatus.style.borderColor = 'var(--warning)';
        idAction.innerHTML = `
          <p style="font-size:11px; margin-bottom:5px;">⚠️ Multiple accounts found.</p>
@@ -74,6 +74,8 @@ let restaurant = null;
          localStorage.setItem('restrodyn_session', JSON.stringify(updatedSession));
          window.location.reload();
        });
+    } else {
+       idStatus.style.display = 'none';
     }
   }
   
