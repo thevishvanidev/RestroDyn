@@ -78,8 +78,18 @@ function mergeData(local, remote, cacheKey) {
       if (existsIdx === -1) {
         combined.push(lItem);
       } else {
-        // If it exists, merge the objects to ensure no data loss
-        combined[existsIdx] = { ...lItem, ...combined[existsIdx] };
+        // If it exists, merge based on updatedAt timestamp if available
+        const rItem = combined[existsIdx];
+        if (lItem.updatedAt && rItem.updatedAt) {
+          if (lItem.updatedAt > rItem.updatedAt) {
+            combined[existsIdx] = { ...rItem, ...lItem };
+          } else {
+            combined[existsIdx] = { ...lItem, ...rItem };
+          }
+        } else {
+          // Fallback: remote still wins but we keep local fields not in remote
+          combined[existsIdx] = { ...lItem, ...rItem };
+        }
       }
     });
     return combined;
