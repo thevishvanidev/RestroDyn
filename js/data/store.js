@@ -16,6 +16,12 @@ export function setStoreNamespace(restaurantId) {
   }
 }
 
+// Allow external sync (like Firebase) to update the memory cache
+export function updateCache(key, value) {
+  memoryCache.set(key, value);
+}
+window._updateRestroDynCache = updateCache;
+
 export function getStoreNamespace() {
   return _restaurantId;
 }

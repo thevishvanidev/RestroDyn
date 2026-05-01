@@ -27,6 +27,10 @@ function localGet(key) {
 function localSet(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    // Update memory cache in store.js if it exists to prevent stale reads
+    if (window._updateRestroDynCache) {
+      window._updateRestroDynCache(key, value);
+    }
   } catch (e) {
     console.warn('localStorage write failed:', e);
   }
